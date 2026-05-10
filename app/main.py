@@ -3,6 +3,7 @@ from contextlib import asynccontextmanager
 from typing import Any
 
 from fastapi import Depends, FastAPI, Header, HTTPException, Request
+from fastapi.responses import Response
 from pydantic import BaseModel, HttpUrl
 from sqlalchemy.orm import Session
 
@@ -50,8 +51,19 @@ app = FastAPI(title="Telegram Personal Assistant", version="0.1.0", lifespan=lif
 
 
 @app.get("/health")
-def health() -> dict[str, str]:
-    return {"status": "ok"}
+def health(request: Request) -> dict[str, Any]:
+    """Liveness for uptime monitors, Coolify healthchecks, and quick debugging."""
+    return {
+        "status": "ok",
+        "service": request.app.title,
+        "version": request.app.version,
+    }
+
+
+@app.head("/health")
+def health_head() -> Response:
+    """Lightweight probe (some monitors use HEAD to save bandwidth)."""
+    return Response(status_code=200)
 
 
 @app.post("/telegram/set-webhook")

@@ -6,11 +6,11 @@ services:
     ports:
       - "8000:8000"
     environment:
-      DATABASE_URL: sqlite:////data/assistant.db
+      DATABASE_URL: sqlite:////app/data/assistant.db
     env_file:
       - .env
     volumes:
-      - telegram_finance_data:/data
+      - telegram_finance_data:/app/data
     restart: unless-stopped
 
 volumes:

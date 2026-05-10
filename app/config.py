@@ -1,7 +1,11 @@
 from functools import lru_cache
+from typing import Final
 
 from pydantic import Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
+
+# Persisted storage in Docker / Coolify: mount a volume here. DATABASE_URL must use this path there.
+DATA_DIR: Final[str] = "/app/data"
 
 
 class Settings(BaseSettings):

@@ -39,7 +39,7 @@ Background: APScheduler interval job → send_due_reminders → mark reminders s
 | LLM | **OpenAI** Python SDK, **chat.completions** + **JSON Schema** strict structured output |
 | Jobs | **APScheduler** `AsyncIOScheduler`, interval by `REMINDER_CHECK_SECONDS` |
 | Tests | **pytest** (`tests/`) |
-| Deploy | Optional **Docker** image + `docker-compose` (`Dockerfile`, [`docker-compose.yml`](docker-compose.yml)); SQLite on persistent volume at `/data` in production (see [`readme.md`](readme.md)) |
+| Deploy | Optional **Docker** image + `docker-compose` (`Dockerfile`, [`docker-compose.yml`](docker-compose.yml)); SQLite on persistent Docker/Coolify volume at **`/app/data`** (`DATA_DIR`), see [`readme.md`](readme.md) |
 
 **Dependencies:** runtime image uses `requirements-prod.txt` (no `pytest`). Dev / local install may use `requirements.txt` including `pytest`.
 
@@ -52,7 +52,7 @@ telegramBot/
   app/
     __init__.py
     main.py          # FastAPI app, lifespan (logging, init_db, scheduler), routes
-    config.py        # Settings from env (get_settings, cached)
+    config.py        # Settings (get_settings), DATA_DIR=/app/data for Docker volumes
     database.py      # Engine, SessionLocal, init_db, get_db dependency
     models.py        # SQLAlchemy models: Expense, Income, Reminder, Note
     schemas.py       # RawParsedMessage, per-intent Action models, validate_action()
@@ -81,7 +81,7 @@ telegramBot/
 
 | Method | Path | Role |
 |--------|------|------|
-| GET | `/health` | Liveness: `{"status":"ok"}` |
+| GET / HEAD | `/health` | Liveness: `GET` returns `status`, `service`, `version`; `HEAD` returns **200** without body (uptime monitors). |
 | POST | `/telegram/set-webhook` | Body: `{"url":"<https webhook url>"}`. Validates `X-Telegram-Bot-Api-Secret-Token` if `TELEGRAM_WEBHOOK_SECRET` is set. Calls Telegram `setWebhook` (optional `secret_token`). |
 | POST | `/telegram/webhook` | Main Telegram update receiver (alias below). |
 | POST | `/webhook/telegram` | Same handler as `/telegram/webhook`. |
@@ -108,7 +108,7 @@ telegramBot/
 |---------|---------|
 | `APP_TIMEZONE` | `ZoneInfo` for “now”, reminders, date logic (default `America/Argentina/Buenos_Aires`) |
 | `LOG_LEVEL` | Root logging level |
-| `DATABASE_URL` | SQLAlchemy URL. Local default: `sqlite:///./assistant.db`. **Docker / Coolify with volume:** `sqlite:////data/assistant.db` (four slashes: absolute path `/data/assistant.db` on Linux). |
+| `DATABASE_URL` | SQLAlchemy URL. Local default: `sqlite:///./assistant.db`. **Docker / Coolify:** mount volume at **`/app/data`** and set **`sqlite:////app/data/assistant.db`** (four slashes = absolute path; canonical dir: **`DATA_DIR`** in [`app/config.py`](app/config.py)). |
 | `TELEGRAM_BOT_TOKEN` | Bot token; empty → send is no-op (warning log) |
 | `TELEGRAM_WEBHOOK_SECRET` | If set, required on webhook/set-webhook via `X-Telegram-Bot-Api-Secret-Token` |
 | `ALLOWED_TELEGRAM_IDS` | Comma-separated `chat_id` integers in `.env`. If non-empty, only those chats are allowed. If empty/unset, any chat may use the bot. |

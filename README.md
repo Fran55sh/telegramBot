@@ -49,7 +49,7 @@ Fill at least:
 | `ENABLE_LLM_PARSER` | Optional | Default `false`: only `/g`, `/i`, `/r` are accepted. Set `true` for free-text parsing (v2.0). |
 | `ALLOWED_TELEGRAM_IDS` | Optional | Comma-separated Telegram `chat_id` values. If non-empty, only those chats can use the bot (private chat id is usually the same as the user id). Leave unset or empty to allow any user (e.g. local dev). |
 | `TELEGRAM_WEBHOOK_SECRET` | Recommended in production | Random secret; must match header when calling webhook endpoints |
-| `DATABASE_URL` | Optional | Default `sqlite:///./assistant.db` |
+| `DATABASE_URL` | Optional | Default `sqlite:///./assistant.db` (local dev). Docker/Coolify: mount volume on **`/app/data`** and set `DATABASE_URL=sqlite:////app/data/assistant.db` (see **`DATA_DIR`** in [`app/config.py`](app/config.py)). |
 | `APP_TIMEZONE` | Optional | Default `America/Argentina/Buenos_Aires` |
 | `OPENAI_MODEL` | Optional | Default `gpt-5-mini` |
 | `REMINDER_CHECK_SECONDS` | Optional | Reminder poll interval (seconds), default `60` |
@@ -83,7 +83,7 @@ python -m uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 curl http://localhost:8000/health
 ```
 
-Expected: `{"status":"ok"}`
+Expected: JSON like `{"status":"ok","service":"Telegram Personal Assistant","version":"0.1.0"}`. `HEAD /health` returns **200** (no body), útil para monitores ligeros.
 
 ## 5. Point Telegram at your server (webhook)
 
@@ -139,14 +139,14 @@ docker compose up -d
 ```
 
 - **Container name:** **`telegram_finance_bot`** (see [`docker-compose.yml`](docker-compose.yml)).
-- **SQLite persistence:** DB lives in a named volume mounted at **`/data`**. Set **`DATABASE_URL=sqlite:////data/assistant.db`** (already set in Compose via `environment`). On Coolify without Compose, set the same env var and mount a **persistent volume** on **`/data`**.
+- **SQLite persistence:** Named Docker volume mounted at **`/app/data`**. Compose sets **`DATABASE_URL=sqlite:////app/data/assistant.db`**. In Coolify, set the same **`DATABASE_URL`** and mount persistent storage at **`/app/data`**.
 
 ### Coolify (summary)
 
 1. Connect the Git repository and deploy with **Dockerfile** (build context: repo root) **or** with **Docker Compose** if you want the fixed `container_name` and volume in version control.
 2. Expose container port **8000** behind your HTTPS domain (Coolify / Traefik).
 3. In **Environment**, set at least **`TELEGRAM_BOT_TOKEN`** and the other variables from [`.env.example`](.env.example) (including **`DATABASE_URL`** for Docker as above, **`TELEGRAM_WEBHOOK_SECRET`**, **`ALLOWED_TELEGRAM_IDS`**, **`ENABLE_LLM_PARSER`**, optional OpenAI keys).
-4. Mount **persistent storage** at **`/data`** so `assistant.db` survives redeploys.
+4. Mount **persistent storage** at **`/app/data`** so `assistant.db` survives redeploys.
 5. Register Telegram’s webhook to `https://<your-domain>/telegram/webhook` via **`POST /telegram/set-webhook`** (same flow as in section 5).
 
 If the platform injects a different **`PORT`**, map public traffic to container port **8000** in the UI, or override the start command to pass `--port` to match.
