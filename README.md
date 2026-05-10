@@ -1,312 +1,156 @@
-# Telegram Personal Assistant V1
+# Telegram Personal Assistant — Setup and run
 
-Asistente personal simple por Telegram para registrar gastos, ingresos, recordatorios y notas usando lenguaje natural.
+Minimal personal assistant bot over Telegram (expenses, incomes, reminders, notes, queries). Backend details and architecture are in **`system.md`**.
 
-Flujo principal:
+## Prerequisites
 
-```text
-Telegram message
--> FastAPI webhook
--> parse_message()
--> OpenAI structured output JSON
--> validacion Python
--> SQLite via SQLAlchemy
--> respuesta corta por Telegram
-```
+- **Python 3.10+** (3.11+ recommended)
+- A **Telegram bot token** from [@BotFather](https://t.me/BotFather)
+- **Optional:** `OPENAI_API_KEY` only if `ENABLE_LLM_PARSER=true` (natural language / v2.0)
+- **Public HTTPS URL** for Telegram webhooks in production (or a tunnel such as ngrok / Cloudflare Tunnel for local dev)
 
-No usa LangChain, agentes, memoria conversacional, microservicios, Docker ni frontend.
-
-## Stack
-
-- Python
-- FastAPI
-- SQLite
-- SQLAlchemy
-- Telegram Bot API
-- OpenAI API, modelo configurable (`gpt-5-mini` por defecto)
-- APScheduler para enviar recordatorios
-
-## Estructura
-
-```text
-app/
-  actions.py      # ejecuta acciones sobre la DB y responde queries
-  config.py       # settings centralizados desde .env
-  database.py     # engine/session/init SQLite
-  errors.py       # errores de parsing
-  fallback.py     # comandos /g, /i, /r sin IA
-  llm.py          # llamada OpenAI con structured outputs
-  main.py         # FastAPI, health, webhook Telegram
-  models.py       # modelos SQLAlchemy
-  parser.py       # parse_message()
-  scheduler.py    # job APScheduler para recordatorios
-  schemas.py      # schemas Pydantic y validacion por intent
-  telegram.py     # cliente Telegram Bot API
-  utils.py        # fechas, importes, formatos
-```
-
-## Configuracion
-
-1. Crear entorno e instalar dependencias:
+## 1. Clone and virtual environment
 
 ```bash
+cd telegramBot
 python -m venv .venv
+```
+
+**Windows (PowerShell)**
+
+```powershell
+.\.venv\Scripts\Activate.ps1
+pip install -r requirements.txt
+```
+
+**Linux / macOS**
+
+```bash
 source .venv/bin/activate
 pip install -r requirements.txt
 ```
 
-2. Editar `.env`:
+## 2. Environment variables
 
-```env
-APP_TIMEZONE=America/Argentina/Buenos_Aires
-LOG_LEVEL=INFO
-DATABASE_URL=sqlite:///./assistant.db
+Copy the example file and edit values:
 
-TELEGRAM_BOT_TOKEN=123456:telegram-token
-TELEGRAM_WEBHOOK_SECRET=change-me
-
-OPENAI_API_KEY=sk-proj-change-me
-OPENAI_MODEL=gpt-5-mini
-
-REMINDER_CHECK_SECONDS=60
+```bash
+copy .env.example .env
 ```
 
-## Correr local
+On Linux/macOS: `cp .env.example .env`
+
+Fill at least:
+
+| Variable | Required | Description |
+|----------|----------|-------------|
+| `TELEGRAM_BOT_TOKEN` | Yes (for real sends) | Token from BotFather |
+| `OPENAI_API_KEY` | If `ENABLE_LLM_PARSER=true` | OpenAI API key for natural language |
+| `ENABLE_LLM_PARSER` | Optional | Default `false`: only `/g`, `/i`, `/r` are accepted. Set `true` for free-text parsing (v2.0). |
+| `ALLOWED_TELEGRAM_IDS` | Optional | Comma-separated Telegram `chat_id` values. If non-empty, only those chats can use the bot (private chat id is usually the same as the user id). Leave unset or empty to allow any user (e.g. local dev). |
+| `TELEGRAM_WEBHOOK_SECRET` | Recommended in production | Random secret; must match header when calling webhook endpoints |
+| `DATABASE_URL` | Optional | Default `sqlite:///./assistant.db` |
+| `APP_TIMEZONE` | Optional | Default `America/Argentina/Buenos_Aires` |
+| `OPENAI_MODEL` | Optional | Default `gpt-5-mini` |
+| `REMINDER_CHECK_SECONDS` | Optional | Reminder poll interval (seconds), default `60` |
+
+See **`.env.example`** for the full list.
+
+### Obtener el `chat_id` (para `ALLOWED_TELEGRAM_IDS`)
+
+En un chat privado con el bot, el `chat.id` suele ser tu id de usuario. Podés verlo en los logs del servidor cuando mandás un mensaje (`telegram_message chat_id=...`), o usando un bot de información de usuario en Telegram.
+
+## 3. Start the application
+
+From the project root (with `.venv` activated):
 
 ```bash
 uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 ```
 
-Health check:
+**Windows** note: if `uvicorn` is not on PATH, use:
+
+```powershell
+python -m uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
+```
+
+- API title: **Telegram Personal Assistant** (FastAPI)
+- SQLite file is created automatically on first run (`assistant.db` by default)
+
+## 4. Verify it is running
 
 ```bash
 curl http://localhost:8000/health
 ```
 
-## Verificacion
+Expected: `{"status":"ok"}`
+
+## 5. Point Telegram at your server (webhook)
+
+Telegram only accepts **HTTPS** webhook URLs. For local development, expose port 8000 with a tunnel and register the webhook.
+
+**Example: ngrok**
+
+```bash
+ngrok http 8000
+```
+
+Use the HTTPS URL ngrok gives you, then register the webhook (replace placeholders):
+
+```bash
+curl -X POST http://localhost:8000/telegram/set-webhook ^
+  -H "Content-Type: application/json" ^
+  -H "X-Telegram-Bot-Api-Secret-Token: YOUR_TELEGRAM_WEBHOOK_SECRET" ^
+  -d "{\"url\":\"https://YOUR-SUBDOMAIN.ngrok-free.app/telegram/webhook\"}"
+```
+
+On Linux/macOS use `\` line continuation instead of `^`.
+
+If `TELEGRAM_WEBHOOK_SECRET` is empty in `.env`, you can omit the header (not recommended for production).
+
+The same payload can target either webhook path: **`/telegram/webhook`** or **`/webhook/telegram`**.
+
+## 6. Quick test commands in Telegram
+
+- `/start` or `/help` — usage text
+- `/g 25000 comida` — expense (gasto)
+- `/i 500000 sueldo` or `/I 500000 sueldo` — income (ingreso); command is case-insensitive
+- `/r turno dni 25/6/26` — reminder on that date (day/month/year or 2-digit year); optional time: `/r mañana 10am dentista`
+- Free-text Spanish, e.g. *"gasté 5000 en transporte"* — only if `ENABLE_LLM_PARSER=true` and `OPENAI_API_KEY` is set (v2.0)
+
+## 7. Tests
 
 ```bash
 python -m pytest
 python -m compileall app tests
 ```
 
-## Configurar webhook de Telegram
+## 8. Docker (local or Coolify / Hetzner)
 
-Telegram necesita una URL publica HTTPS. Para desarrollo local podés usar ngrok, Cloudflare Tunnel o similar.
+Production dependencies: **`requirements-prod.txt`** (same as `requirements.txt` without `pytest`). The image runs **Uvicorn** on port **8000** as a non-root user and exposes **`GET /health`** for health checks.
 
-Ejemplo con ngrok:
+### Build and run with Compose
 
-```bash
-ngrok http 8000
-```
-
-Luego registrar el webhook:
+From the project root, create **`.env`** from **`.env.example`** and set secrets (Compose references **`env_file: .env`**).
 
 ```bash
-curl -X POST http://localhost:8000/telegram/set-webhook \
-  -H "Content-Type: application/json" \
-  -H "X-Telegram-Bot-Api-Secret-Token: change-me" \
-  -d '{"url":"https://TU-DOMINIO.ngrok-free.app/telegram/webhook"}'
+docker compose build
+docker compose up -d
 ```
 
-El endpoint valida `TELEGRAM_WEBHOOK_SECRET` usando el header oficial
-`X-Telegram-Bot-Api-Secret-Token` cuando el secreto esta configurado.
+- **Container name:** **`telegram_finance_bot`** (see [`docker-compose.yml`](docker-compose.yml)).
+- **SQLite persistence:** DB lives in a named volume mounted at **`/data`**. Set **`DATABASE_URL=sqlite:////data/assistant.db`** (already set in Compose via `environment`). On Coolify without Compose, set the same env var and mount a **persistent volume** on **`/data`**.
 
-## Intenciones soportadas
+### Coolify (summary)
 
-### 1. expense
+1. Connect the Git repository and deploy with **Dockerfile** (build context: repo root) **or** with **Docker Compose** if you want the fixed `container_name` and volume in version control.
+2. Expose container port **8000** behind your HTTPS domain (Coolify / Traefik).
+3. In **Environment**, set at least **`TELEGRAM_BOT_TOKEN`** and the other variables from [`.env.example`](.env.example) (including **`DATABASE_URL`** for Docker as above, **`TELEGRAM_WEBHOOK_SECRET`**, **`ALLOWED_TELEGRAM_IDS`**, **`ENABLE_LLM_PARSER`**, optional OpenAI keys).
+4. Mount **persistent storage** at **`/data`** so `assistant.db` survives redeploys.
+5. Register Telegram’s webhook to `https://<your-domain>/telegram/webhook` via **`POST /telegram/set-webhook`** (same flow as in section 5).
 
-Ejemplos:
+If the platform injects a different **`PORT`**, map public traffic to container port **8000** in the UI, or override the start command to pass `--port` to match.
 
-- `gasté 25000 en comida`
-- `ayer compré tornillos por 12 lucas`
+---
 
-Campos finales:
-
-```json
-{
-  "intent": "expense",
-  "amount": 25000,
-  "category": "comida",
-  "date": "2026-05-09",
-  "description": "gasté 25000 en comida"
-}
-```
-
-### 2. income
-
-Ejemplos:
-
-- `recibí 1 millón de sueldo`
-- `me pagaron 500 mil`
-
-Campos finales:
-
-```json
-{
-  "intent": "income",
-  "amount": 1000000,
-  "source": "sueldo",
-  "date": "2026-05-09",
-  "description": "recibí 1 millón de sueldo"
-}
-```
-
-### 3. reminder
-
-Ejemplos:
-
-- `recordame el 20 de junio ir al dentista`
-- `mañana tengo turno 10am`
-
-Campos finales:
-
-```json
-{
-  "intent": "reminder",
-  "datetime": "2026-06-20T09:00:00",
-  "text": "ir al dentista"
-}
-```
-
-### 4. note
-
-Ejemplos:
-
-- `peli para ver matrix en hbo`
-- `idea: importar fuentes slim`
-
-Campos finales:
-
-```json
-{
-  "intent": "note",
-  "text": "peli para ver matrix en hbo",
-  "tags": ["peli", "hbo"]
-}
-```
-
-### 5. query
-
-Ejemplos:
-
-- `cuánto gasté este mes`
-- `qué recordatorios tengo`
-
-Query types internos:
-
-- `expenses_total`
-- `incomes_total`
-- `balance`
-- `reminders_list`
-- `notes_search`
-
-## Structured outputs
-
-El LLM no ejecuta logica ni toca la base. Solo devuelve JSON con schema estricto.
-
-Schema usado por `app/llm.py`:
-
-```json
-{
-  "intent": "expense|income|reminder|note|query|unknown",
-  "amount": 25000,
-  "category": "comida",
-  "source": null,
-  "date": "2026-05-09",
-  "description": "detalle util",
-  "datetime": null,
-  "text": null,
-  "tags": null,
-  "query_type": null,
-  "period": null
-}
-```
-
-Todos los campos son requeridos por el schema de OpenAI, pero los campos no usados van en `null`.
-Despues, Pydantic valida condicionalmente segun `intent`.
-
-## Prompt real
-
-Resumen del system prompt incluido en `app/llm.py`:
-
-```text
-Sos un parser JSON para un asistente personal por Telegram.
-No converses, no expliques y no ejecutes lógica: solo clasificá el mensaje y devolvé JSON válido.
-
-Reglas:
-- Usá fechas relativas contra el "ahora" provisto.
-- Para expense/income, si no hay fecha explícita usá la fecha de hoy.
-- Para reminder, devolvé datetime ISO 8601 local. Si falta hora, inferí 09:00.
-- Normalizá importes: luca/lucas=1000, mil=1000, palo/palos=1000000, millón=1000000.
-- query_type válido: expenses_total, incomes_total, balance, reminders_list, notes_search.
-- period válido: today, week, current_month, month, all.
-```
-
-El user prompt agrega:
-
-```text
-Ahora local: 2026-05-09T11:30:00-03:00
-Zona horaria: America/Argentina/Buenos_Aires
-Mensaje de Telegram: ayer compré tornillos por 12 lucas
-```
-
-## Fallback sin IA
-
-Si el mensaje empieza con estos comandos, no se llama a OpenAI:
-
-- `/g` gasto
-- `/i` ingreso
-- `/r` recordatorio
-
-Ejemplos:
-
-```text
-/g 25000 comida
-/g 12 lucas tornillos
-/i 1000000 sueldo
-/i 500 mil freelance
-/r mañana dentista
-/r mañana 10am dentista
-```
-
-El fallback soporta importes basicos como `lucas`, `mil`, `palo` y fechas relativas simples como `hoy`, `ayer`, `mañana`, `pasado mañana`.
-
-## Respuestas
-
-Respuestas cortas y amigables:
-
-- `Listo, guardé $25.000 en comida.`
-- `Listo, guardé ingreso de $1.000.000 por sueldo.`
-- `Listo, te recuerdo el 20/06/2026 09:00: ir al dentista.`
-- `Gastaste $37.000 en el período.`
-
-## Logs y errores
-
-La app registra:
-
-- update de Telegram recibido
-- texto recibido
-- request/response del LLM
-- structured output invalido
-- respuesta enviada al usuario
-- envios de recordatorios
-
-Si el LLM devuelve JSON invalido, faltan campos o la validacion falla, el usuario recibe una respuesta corta:
-
-```text
-No pude entenderlo. Probá con: /g 25000 comida
-```
-
-## Base de datos
-
-SQLite se crea automaticamente en `assistant.db`.
-
-Tablas:
-
-- `expenses`
-- `incomes`
-- `reminders`
-- `notes`
-
-No hay migraciones en esta V1 para mantenerla simple. Si se extiende para produccion, el siguiente paso natural seria Alembic.
+For intents, JSON schema, module map, and Docker deployment notes, see **`system.md`**.

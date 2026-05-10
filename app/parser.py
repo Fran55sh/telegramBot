@@ -3,7 +3,7 @@ import logging
 from pydantic import ValidationError
 
 from app.config import Settings
-from app.errors import ParserError
+from app.errors import LlmDisabledError, ParserError
 from app.fallback import is_fallback_command, parse_fallback_command
 from app.llm import LLMService
 from app.schemas import Action, validate_action
@@ -23,6 +23,10 @@ class MessageParser:
         if is_fallback_command(text):
             logger.info("fallback_parse text=%r", text)
             return parse_fallback_command(text, now, self.settings)
+
+        if not self.settings.enable_llm_parser:
+            logger.info("llm_parser_disabled text=%r", text)
+            raise LlmDisabledError()
 
         raw = await self.llm.parse(text, now)
         try:

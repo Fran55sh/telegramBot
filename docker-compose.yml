@@ -1,0 +1,17 @@
+services:
+  telegram_finance_bot:
+    build: .
+    image: telegram-finance-bot:local
+    container_name: telegram_finance_bot
+    ports:
+      - "8000:8000"
+    environment:
+      DATABASE_URL: sqlite:////data/assistant.db
+    env_file:
+      - .env
+    volumes:
+      - telegram_finance_data:/data
+    restart: unless-stopped
+
+volumes:
+  telegram_finance_data:

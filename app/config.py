@@ -21,7 +21,23 @@ class Settings(BaseSettings):
     openai_api_key: str = Field(default="", validation_alias="OPENAI_API_KEY")
     openai_model: str = Field(default="gpt-5-mini", validation_alias="OPENAI_MODEL")
 
+    enable_llm_parser: bool = Field(default=False, validation_alias="ENABLE_LLM_PARSER")
+
+    allowed_telegram_ids_csv: str = Field(default="", validation_alias="ALLOWED_TELEGRAM_IDS")
+
     reminder_check_seconds: int = 60
+
+    @property
+    def allowed_telegram_ids(self) -> list[int]:
+        text = self.allowed_telegram_ids_csv.strip()
+        if not text:
+            return []
+        out: list[int] = []
+        for part in text.split(","):
+            part = part.strip()
+            if part:
+                out.append(int(part))
+        return out
 
     @property
     def telegram_api_base_url(self) -> str:

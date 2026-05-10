@@ -9,7 +9,7 @@ from sqlalchemy.orm import Session
 from app.actions import ActionService
 from app.config import Settings, get_settings
 from app.database import get_db, init_db
-from app.errors import ParserError
+from app.errors import LlmDisabledError, ParserError
 from app.parser import MessageParser
 from app.scheduler import create_scheduler
 from app.telegram import TelegramClient
@@ -93,10 +93,19 @@ async def telegram_webhook(
     logger.info("telegram_message chat_id=%s text=%r", chat_id, text)
     telegram = TelegramClient(settings)
 
+    if settings.allowed_telegram_ids and chat_id not in settings.allowed_telegram_ids:
+        logger.warning("telegram_forbidden chat_id=%s", chat_id)
+        await telegram.send_message(
+            chat_id,
+            "No tenés permiso para usar este bot. Si deberías tener acceso, pedile al administrador que agregue tu chat_id a ALLOWED_TELEGRAM_IDS.",
+        )
+        return {"ok": True}
+
     if text in {"/start", "/help"}:
         response_text = (
-            "Hola. Mandame gastos, ingresos, recordatorios o notas.\n"
-            "Atajos: /g 25000 comida, /i 1000000 sueldo, /r mañana dentista."
+            "Hola. Usá comandos: /g importe categoría (gasto), /i importe origen (ingreso), "
+            "/r texto [fecha u hora] (recordatorio; fecha al final tipo 25/6/26).\n"
+            "Lenguaje natural: requiere ENABLE_LLM_PARSER en el servidor (v2.0)."
         )
         await telegram.send_message(chat_id, response_text)
         logger.info("telegram_response chat_id=%s text=%r", chat_id, response_text)
@@ -105,6 +114,9 @@ async def telegram_webhook(
     try:
         action = await MessageParser(settings).parse_message(text)
         response_text = ActionService(db, settings).execute(chat_id, action)
+    except LlmDisabledError as exc:
+        logger.info("llm_disabled chat_id=%s", chat_id)
+        response_text = str(exc)
     except ParserError as exc:
         logger.warning("parse_failed chat_id=%s error=%s", chat_id, exc)
         response_text = "No pude entenderlo. Probá con: /g 25000 comida"

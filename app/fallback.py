@@ -1,5 +1,5 @@
 import re
-from datetime import datetime, time, timedelta
+from datetime import date, datetime, time, timedelta
 from decimal import Decimal
 
 from app.config import Settings
@@ -24,6 +24,8 @@ TIME_RE = re.compile(
     r"|\b(?P<hour24>\d{1,2}):(?P<minute24>\d{2})\b",
     re.I,
 )
+
+TRAILING_DMY_RE = re.compile(r"(\d{1,2})/(\d{1,2})/(\d{2,4})\s*$")
 
 
 def is_fallback_command(text: str) -> bool:
@@ -103,23 +105,49 @@ def _extract_relative_date(text: str, now: datetime) -> tuple:
     return tx_date, " ".join(text.split())
 
 
-def _parse_reminder_body(body: str, now: datetime) -> tuple[datetime, str]:
-    target_date = now.date()
-    text = body
-    lowered = body.lower()
+def _extract_trailing_dmy(text: str) -> tuple[date, str] | None:
+    """Parse D/M/Y or D/M/YY at end of string; returns (date, text_without_date)."""
+    stripped = text.strip()
+    match = TRAILING_DMY_RE.search(stripped)
+    if not match:
+        return None
+    day_s, month_s, year_s = match.group(1), match.group(2), match.group(3)
+    day, month = int(day_s), int(month_s)
+    year = int(year_s)
+    if year < 100:
+        year += 2000
+    try:
+        target = date(year, month, day)
+    except ValueError as exc:
+        raise ParserError("La fecha no es válida") from exc
+    rest = stripped[: match.start()].strip()
+    return target, rest
 
-    relative_dates = [
-        ("pasado mañana", 2),
-        ("pasado manana", 2),
-        ("mañana", 1),
-        ("manana", 1),
-        ("hoy", 0),
-    ]
-    for marker, days in relative_dates:
-        if re.search(rf"\b{marker}\b", lowered):
-            target_date = (now + timedelta(days=days)).date()
-            text = re.sub(rf"\b{marker}\b", "", text, flags=re.I).strip()
-            break
+
+def _parse_reminder_body(body: str, now: datetime) -> tuple[datetime, str]:
+    text = body.strip()
+    target_date: date | None = None
+    explicit = _extract_trailing_dmy(text)
+    if explicit is not None:
+        target_date, text = explicit
+    else:
+        lowered = text.lower()
+
+        relative_dates = [
+            ("pasado mañana", 2),
+            ("pasado manana", 2),
+            ("mañana", 1),
+            ("manana", 1),
+            ("hoy", 0),
+        ]
+        for marker, days in relative_dates:
+            if re.search(rf"\b{marker}\b", lowered):
+                target_date = (now + timedelta(days=days)).date()
+                text = re.sub(rf"\b{marker}\b", "", text, flags=re.I).strip()
+                break
+
+    if target_date is None:
+        target_date = now.date()
 
     target_time = time(hour=9, minute=0)
     match = TIME_RE.search(text)
