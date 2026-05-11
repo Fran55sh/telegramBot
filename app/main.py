@@ -35,6 +35,20 @@ async def lifespan(app: FastAPI):
     configure_logging(settings)
     init_db()
 
+    logger.info(
+        "app_startup environment=%s database_url=%s",
+        settings.environment,
+        settings.database_url,
+    )
+    if settings.environment.strip().lower() in ("production", "prod"):
+        dbu = settings.database_url
+        if dbu.startswith("sqlite:///./") or dbu.startswith("sqlite:///@./"):
+            logger.warning(
+                "Relative DATABASE_URL (%s): data is NOT stored under mounted /app/data. "
+                "Use DATABASE_URL=sqlite:////app/data/assistant.db and remove DATABASE_URL_LOCAL on the server.",
+                dbu,
+            )
+
     scheduler = create_scheduler(settings)
     scheduler.start()
     app.state.scheduler = scheduler

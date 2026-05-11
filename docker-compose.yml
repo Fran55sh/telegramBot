@@ -6,6 +6,7 @@ services:
     ports:
       - "8000:8000"
     environment:
+      ENVIRONMENT: production
       DATABASE_URL: sqlite:////app/data/assistant.db
     env_file:
       - .env

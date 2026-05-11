@@ -49,7 +49,9 @@ Fill at least:
 | `ENABLE_LLM_PARSER` | Optional | Default `false`: only `/g`, `/i`, `/r` are accepted. Set `true` for free-text parsing (v2.0). |
 | `ALLOWED_TELEGRAM_IDS` | Optional | Comma-separated Telegram `chat_id` values. If non-empty, only those chats can use the bot (private chat id is usually the same as the user id). Leave unset or empty to allow any user (e.g. local dev). |
 | `TELEGRAM_WEBHOOK_SECRET` | Recommended in production | Random secret; must match header when calling webhook endpoints |
-| `DATABASE_URL` | Optional | Default `sqlite:///./assistant.db` (local dev). Docker/Coolify: mount volume on **`/app/data`** and set `DATABASE_URL=sqlite:////app/data/assistant.db` (see **`DATA_DIR`** in [`app/config.py`](app/config.py)). |
+| `ENVIRONMENT` | Optional | Default `development`. In **production** use `production` or `prod`: the app uses **`DATABASE_URL`** only. In **development** (`development` / `dev` / `local`), **`DATABASE_URL_LOCAL`** overrides **`DATABASE_URL`** when set. |
+| `DATABASE_URL` | Production required | Docker/Coolify: `sqlite:////app/data/assistant.db` with volume on **`/app/data`** (see **`DATA_DIR`** in [`app/config.py`](app/config.py)). Fallback in dev if `DATABASE_URL_LOCAL` is empty. |
+| `DATABASE_URL_LOCAL` | Optional | **`ENVIRONMENT` not production:** local SQLite (e.g. `sqlite:///./assistant.db`). Ignored when `ENVIRONMENT` is production. |
 | `APP_TIMEZONE` | Optional | Default `America/Argentina/Buenos_Aires` |
 | `OPENAI_MODEL` | Optional | Default `gpt-5-mini` |
 | `REMINDER_CHECK_SECONDS` | Optional | Reminder poll interval (seconds), default `60` |
@@ -145,7 +147,7 @@ docker compose up -d
 
 1. Connect the Git repository and deploy with **Dockerfile** (build context: repo root) **or** with **Docker Compose** if you want the fixed `container_name` and volume in version control.
 2. Expose container port **8000** behind your HTTPS domain (Coolify / Traefik).
-3. In **Environment**, set at least **`TELEGRAM_BOT_TOKEN`** and the other variables from [`.env.example`](.env.example) (including **`DATABASE_URL`** for Docker as above, **`TELEGRAM_WEBHOOK_SECRET`**, **`ALLOWED_TELEGRAM_IDS`**, **`ENABLE_LLM_PARSER`**, optional OpenAI keys).
+3. In **Environment**: **`DATABASE_URL=sqlite:////app/data/assistant.db`**, **`TELEGRAM_BOT_TOKEN`**, optional vars from [`.env.example`](.env.example). **`ENVIRONMENT=production`** is defaulted in **`Dockerfile`** — do **not** set **`ENVIRONMENT=development`** in Coolify. **Unset / omit `DATABASE_URL_LOCAL`**; if present (e.g. copied laptop `.env`) with **`development`**, SQLite uses **`sqlite:///./assistant.db`** → file under **`/app/`** instead of **`/app/data/`**, so the mounted DB stays **empty**.
 4. Mount **persistent storage** at **`/app/data`** so `assistant.db` survives redeploys.
 5. Register Telegram’s webhook to `https://<your-domain>/telegram/webhook` via **`POST /telegram/set-webhook`** (same flow as in section 5).
 

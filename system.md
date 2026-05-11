@@ -108,7 +108,9 @@ telegramBot/
 |---------|---------|
 | `APP_TIMEZONE` | `ZoneInfo` for “now”, reminders, date logic (default `America/Argentina/Buenos_Aires`) |
 | `LOG_LEVEL` | Root logging level |
-| `DATABASE_URL` | SQLAlchemy URL. Local default: `sqlite:///./assistant.db`. **Docker / Coolify:** mount volume at **`/app/data`** and set **`sqlite:////app/data/assistant.db`** (four slashes = absolute path; canonical dir: **`DATA_DIR`** in [`app/config.py`](app/config.py)). |
+| `ENVIRONMENT` | Default `development`. `production` / `prod`: use **`DATABASE_URL`** only. Else: use **`DATABASE_URL_LOCAL`** when non-empty, otherwise **`DATABASE_URL`**. |
+| `DATABASE_URL_LOCAL` | Dev override (ignored in production). Typical: `sqlite:///./assistant.db`. |
+| `DATABASE_URL` | SQLAlchemy URL. **Docker / Coolify (production):** `sqlite:////app/data/assistant.db` + volume on **`/app/data`** (`DATA_DIR`). |
 | `TELEGRAM_BOT_TOKEN` | Bot token; empty → send is no-op (warning log) |
 | `TELEGRAM_WEBHOOK_SECRET` | If set, required on webhook/set-webhook via `X-Telegram-Bot-Api-Secret-Token` |
 | `ALLOWED_TELEGRAM_IDS` | Comma-separated `chat_id` integers in `.env`. If non-empty, only those chats are allowed. If empty/unset, any chat may use the bot. |
