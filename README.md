@@ -129,7 +129,7 @@ python -m compileall app tests
 
 ## 8. Docker (local or Coolify / Hetzner)
 
-Production dependencies: **`requirements-prod.txt`** (same as `requirements.txt` without `pytest`). The image runs **Uvicorn** on port **8000** as a non-root user and exposes **`GET /health`** for health checks.
+Production dependencies: **`requirements-prod.txt`** (same as `requirements.txt` without `pytest`). The image exposes **`GET /health`**. The **`docker-entrypoint.sh`** starts the app as user **`app`** after fixing **`/app/data`** ownership for SQLite on Docker volumes.
 
 ### Build and run with Compose
 
