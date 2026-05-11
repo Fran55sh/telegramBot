@@ -14,7 +14,7 @@ from app.errors import LlmDisabledError, ParserError
 from app.parser import MessageParser
 from app.scheduler import create_scheduler
 from app.telegram import TelegramClient
-from app.utils import normalize_telegram_command_text
+from app.utils import normalize_incoming_chat_text, resolved_slash_command
 
 logger = logging.getLogger(__name__)
 
@@ -113,7 +113,7 @@ async def telegram_webhook(
 
     chat = message.get("chat") or {}
     chat_id = chat.get("id")
-    text = normalize_telegram_command_text(message.get("text") or "")
+    text = normalize_incoming_chat_text(message.get("text") or "")
     if not chat_id or not text:
         return {"ok": True}
 
@@ -128,7 +128,8 @@ async def telegram_webhook(
         )
         return {"ok": True}
 
-    if text in {"/start", "/help"}:
+    cmd = resolved_slash_command(message, text)
+    if cmd in {"/start", "/help"}:
         response_text = (
             "Hola. Usá comandos: /g importe categoría (gasto), /i importe origen (ingreso), "
             "/r texto [fecha u hora] (recordatorio; fecha al final tipo 25/6/26).\n"
@@ -139,8 +140,7 @@ async def telegram_webhook(
         logger.info("telegram_response chat_id=%s text=%r", chat_id, response_text)
         return {"ok": True}
 
-    first_token = text.strip().split()[0].lower().split("@", 1)[0]
-    if first_token == "/get":
+    if cmd == "/get":
         response_text = ActionService(db, settings).format_lifetime_totals(chat_id)
         await telegram.send_message(chat_id, response_text)
         logger.info("telegram_response chat_id=%s text=%r", chat_id, response_text)

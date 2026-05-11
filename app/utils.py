@@ -1,5 +1,7 @@
+import unicodedata
 from datetime import date, datetime
 from decimal import Decimal, InvalidOperation
+from typing import Any
 from zoneinfo import ZoneInfo
 
 from app.config import Settings
@@ -16,6 +18,54 @@ def normalize_telegram_command_text(text: str) -> str:
     while t and t[0] in _TELEGRAM_LEADING_JUNK:
         t = t[1:].lstrip()
     return t.strip()
+
+
+def normalize_incoming_chat_text(raw: str) -> str:
+    """Normalize user message text before routing (junk strip + NFC/NFKC compat mapping)."""
+    return unicodedata.normalize(
+        "NFKC",
+        normalize_telegram_command_text(raw),
+    ).strip()
+
+
+def telegram_entity_slice(message_text: str, offset: int, length: int) -> str:
+    """Substring using UTF-16 code-unit offsets from Telegram Bot API entities."""
+    if offset < 0 or length <= 0 or not message_text:
+        return ""
+    blob = message_text.encode("utf-16-le")[offset * 2 : (offset + length) * 2]
+    return blob.decode("utf-16-le")
+
+
+def resolved_slash_command(message: dict[str, Any], normalized_text: str) -> str | None:
+    """
+    Resolve the slash command Telegram marks as bot_command; otherwise the first leading /token.
+
+    Entities use UTF-16 offsets; relying on plain split() misses correct commands when prefixes
+    (emoji/BOM) skew the visible start offset.
+    """
+    raw_text = message.get("text") or ""
+    for e in message.get("entities") or []:
+        if e.get("type") != "bot_command":
+            continue
+        try:
+            off = int(e.get("offset", 0))
+            ln = int(e.get("length", 0))
+        except (TypeError, ValueError):
+            continue
+        frag = telegram_entity_slice(raw_text, off, ln)
+        frag_norm = unicodedata.normalize(
+            "NFKC",
+            normalize_telegram_command_text(frag),
+        ).strip()
+        if not frag_norm:
+            continue
+        tok = frag_norm.split()[0].lower().split("@", 1)[0]
+        if tok.startswith("/"):
+            return tok
+    if not normalized_text:
+        return None
+    head = normalized_text.split()[0].lower().split("@", 1)[0]
+    return head if head.startswith("/") else None
 
 
 def local_now(settings: Settings) -> datetime:
