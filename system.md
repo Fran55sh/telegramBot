@@ -91,6 +91,7 @@ telegramBot/
 - Ignores updates without `message` / `edited_message` or without text.
 - If **`ALLOWED_TELEGRAM_IDS`** is non-empty and **`chat_id`** is not in the list: send a short “not allowed” message and return (no DB).
 - **`/start`**, **`/help`**: fixed Spanish help text, no DB/LLM (only after passing allowlist).
+- **`/get`**: read-only DB totals for the chat (**Ingresos** + **Egresos**, historic sums); skips parser/LLM.
 - Otherwise: `MessageParser.parse_message` → `ActionService.execute` → `TelegramClient.send_message`.
 - **`LlmDisabledError`**: user sees a message that only `/g`, `/i`, `/r` are accepted until LLM is enabled.
 - **`ParserError`** (other): user sees *"No pude entenderlo. Probá con: /g 25000 comida"*.

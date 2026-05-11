@@ -114,7 +114,7 @@ The same payload can target either webhook path: **`/telegram/webhook`** or **`/
 
 ## 6. Quick test commands in Telegram
 
-- `/start` or `/help` — usage text
+- `/get` — totales históricos: **Ingresos** y **Egresos** (sumas de ese chat)
 - `/g 25000 comida` — expense (gasto)
 - `/i 500000 sueldo` or `/I 500000 sueldo` — income (ingreso); command is case-insensitive
 - `/r turno dni 25/6/26` — reminder on that date (day/month/year or 2-digit year); optional time: `/r mañana 10am dentista`

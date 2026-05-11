@@ -15,6 +15,12 @@ class ActionService:
         self.db = db
         self.settings = settings
 
+    def format_lifetime_totals(self, chat_id: int) -> str:
+        """Sum all incomes and expenses for chat (no period filter)."""
+        ingresos = self._sum_money(chat_id, Income, "all")
+        egresos = self._sum_money(chat_id, Expense, "all")
+        return f"Ingresos: {format_money(ingresos)}\nEgresos: {format_money(egresos)}"
+
     def execute(self, chat_id: int, action: Action) -> str:
         if isinstance(action, ExpenseAction):
             return self._create_expense(chat_id, action)

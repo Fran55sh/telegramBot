@@ -131,8 +131,16 @@ async def telegram_webhook(
         response_text = (
             "Hola. Usá comandos: /g importe categoría (gasto), /i importe origen (ingreso), "
             "/r texto [fecha u hora] (recordatorio; fecha al final tipo 25/6/26).\n"
+            "/get muestra suma histórica de ingresos y egresos.\n"
             "Lenguaje natural: requiere ENABLE_LLM_PARSER en el servidor (v2.0)."
         )
+        await telegram.send_message(chat_id, response_text)
+        logger.info("telegram_response chat_id=%s text=%r", chat_id, response_text)
+        return {"ok": True}
+
+    first_token = text.strip().split()[0].lower().split("@", 1)[0]
+    if first_token == "/get":
+        response_text = ActionService(db, settings).format_lifetime_totals(chat_id)
         await telegram.send_message(chat_id, response_text)
         logger.info("telegram_response chat_id=%s text=%r", chat_id, response_text)
         return {"ok": True}
