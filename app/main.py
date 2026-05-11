@@ -14,6 +14,7 @@ from app.errors import LlmDisabledError, ParserError
 from app.parser import MessageParser
 from app.scheduler import create_scheduler
 from app.telegram import TelegramClient
+from app.utils import normalize_telegram_command_text
 
 logger = logging.getLogger(__name__)
 
@@ -112,7 +113,7 @@ async def telegram_webhook(
 
     chat = message.get("chat") or {}
     chat_id = chat.get("id")
-    text = (message.get("text") or "").strip()
+    text = normalize_telegram_command_text(message.get("text") or "")
     if not chat_id or not text:
         return {"ok": True}
 

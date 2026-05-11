@@ -7,7 +7,7 @@ class LlmDisabledError(ParserError):
 
     USER_MESSAGE = (
         "Por ahora solo se aceptan comandos: "
-        "/g importe categoría, /i importe origen, /r texto [fecha u hora]. "
+        "/g importe categoría, /i importe origen, /r texto [fecha u hora], /get (totales). "
         "Activá ENABLE_LLM_PARSER en el servidor para lenguaje natural (v2.0)."
     )
 
