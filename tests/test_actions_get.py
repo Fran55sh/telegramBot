@@ -48,13 +48,13 @@ def test_format_monthly_report_groups_expenses(monkeypatch):
     out = svc.format_monthly_report(99, "")
 
     assert "Mayo 2026" in out
-    assert "Ingresos" in out
-    assert "Egresos" in out
-    assert "🏠 Hogar" in out
-    assert "supermercado" in out
-    assert "🍔 Comidas" in out
-    assert "restaurantes" in out
-    assert "Balance" in out
+    assert "Ingresos: $1.500" in out
+    assert "Egresos: $700" in out
+    assert " - supermercado $500" in out
+    assert "71,4%" in out
+    assert " - restaurantes $200" in out
+    assert "28,6%" in out
+    assert "Balance: $800" in out
 
 
 def test_format_monthly_report_empty_month(monkeypatch):

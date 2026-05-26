@@ -6,12 +6,7 @@ from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from app.config import Settings
-from app.expense_categories import (
-    format_expense_groups_report,
-    group_for_subcategory,
-    normalize_expense_category,
-    subcategory_display,
-)
+from app.expense_categories import normalize_expense_category, subcategory_display
 from app.models import Expense, Income, Note, Reminder
 from app.months import month_range, month_title, parse_month_arg
 from app.periods import period_label, resolve_date_range
@@ -39,36 +34,16 @@ class ActionService:
         total_in = sum((i.amount for i in incomes), Decimal(0))
         total_out = sum((e.amount for e in expenses), Decimal(0))
 
-        lines = [f"📅 {title}", ""]
-        lines.append(f"💰 Ingresos: {format_money(total_in)}")
-        if incomes:
-            for item in incomes:
-                detail = f" — {item.description}" if item.description else ""
-                lines.append(
-                    f"• {format_date(item.date)} {format_money(item.amount)} {item.source}{detail}"
-                )
-        else:
-            lines.append("• (sin ingresos)")
+        by_category: dict[str, Decimal] = defaultdict(Decimal)
+        for item in expenses:
+            by_category[item.category] += item.amount
 
-        lines.append("")
-        lines.append(f"💸 Egresos: {format_money(total_out)}")
-        if expenses:
-            grouped_amounts: dict[str, dict[str, Decimal]] = defaultdict(lambda: defaultdict(Decimal))
-            for item in expenses:
-                group = group_for_subcategory(item.category)
-                grouped_amounts[group][item.category] += item.amount
+        lines = [title, "", f"Ingresos: {format_money(total_in)}", f"Egresos: {format_money(total_out)}"]
 
-            lines.extend(format_expense_groups_report(grouped_amounts))
-            lines.append("")
-            lines.append("Detalle:")
-            for item in expenses:
-                cat = subcategory_display(item.category)
-                detail = f" — {item.description}" if item.description else ""
-                lines.append(
-                    f"• {format_date(item.date)} {format_money(item.amount)} [{cat}]{detail}"
-                )
-        else:
-            lines.append("• (sin egresos)")
+        for category, amount in sorted(by_category.items(), key=lambda x: x[1], reverse=True):
+            label = subcategory_display(category)
+            pct = _expense_percent(amount, total_out)
+            lines.append(f" - {label} {format_money(amount)} ({pct})")
 
         lines.append("")
         lines.append(f"Balance: {format_money(total_in - total_out)}")
@@ -233,3 +208,13 @@ class ActionService:
             tags = f" ({', '.join(note.tags)})" if note.tags else ""
             lines.append(f"- {note.text}{tags}")
         return "Notas:\n" + "\n".join(lines)
+
+
+def _expense_percent(category_total: Decimal, expenses_total: Decimal) -> str:
+    if expenses_total <= 0:
+        return "0%"
+    pct = (category_total / expenses_total * 100).quantize(Decimal("0.1"))
+    if pct == pct.to_integral_value():
+        return f"{int(pct)}%"
+    text = f"{pct:.1f}".replace(".", ",")
+    return f"{text}%"
