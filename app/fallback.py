@@ -4,7 +4,7 @@ from decimal import Decimal
 
 from app.config import Settings
 from app.errors import ParserError
-from app.schemas import ExpenseAction, IncomeAction, ReminderAction
+from app.schemas import ExpenseAction, IncomeAction, QueryAction, ReminderAction
 from app.utils import parse_decimal, to_naive_local
 
 AMOUNT_MULTIPLIERS = {
@@ -27,9 +27,32 @@ TIME_RE = re.compile(
 
 TRAILING_DMY_RE = re.compile(r"(\d{1,2})/(\d{1,2})/(\d{2,4})\s*$")
 
+LR_RANGE_RE = re.compile(
+    r"(\d{1,2})/(\d{1,2})/(\d{2,4})\s*(?:-|–|a)\s*(\d{1,2})/(\d{1,2})/(\d{2,4})",
+    re.I,
+)
+
+LR_PERIOD_ALIASES: list[tuple[str, str]] = [
+    ("proxima semana", "next_week"),
+    ("próxima semana", "next_week"),
+    ("proximo mes", "next_month"),
+    ("próximo mes", "next_month"),
+    ("esta semana", "week"),
+    ("este mes", "current_month"),
+    ("manana", "tomorrow"),
+    ("mañana", "tomorrow"),
+    ("semana", "week"),
+    ("mes", "current_month"),
+    ("hoy", "today"),
+    ("todo", "all"),
+    ("todos", "all"),
+]
+
 
 def is_fallback_command(text: str) -> bool:
     lowered = text.strip().lower()
+    if lowered == "/lr" or lowered.startswith("/lr "):
+        return True
     return lowered.startswith("/g ") or lowered.startswith("/i ") or lowered.startswith("/r ")
 
 
@@ -38,6 +61,9 @@ def parse_fallback_command(text: str, now: datetime, settings: Settings):
     stripped = text.strip()
     command, _, body = stripped.partition(" ")
     body = body.strip()
+    if command.lower() == "/lr":
+        return _parse_list_reminders(body)
+
     if not body:
         raise ParserError("El comando está vacío")
 
@@ -168,6 +194,43 @@ def _parse_reminder_body(body: str, now: datetime) -> tuple[datetime, str]:
     if not reminder_text:
         raise ParserError("Falta el texto del recordatorio")
     return datetime.combine(target_date, target_time), reminder_text
+
+
+def _parse_list_reminders(body: str) -> QueryAction:
+    text = body.strip()
+    if not text:
+        return QueryAction(query_type="reminders_list", period="all")
+
+    range_match = LR_RANGE_RE.search(text)
+    if range_match:
+        start = _dmy_groups_to_date(range_match.group(1), range_match.group(2), range_match.group(3))
+        end = _dmy_groups_to_date(range_match.group(4), range_match.group(5), range_match.group(6))
+        return QueryAction(
+            query_type="reminders_list",
+            period="range",
+            date_from=start,
+            date_to=end,
+        )
+
+    lowered = _strip_accents(text.lower())
+    for alias, period in sorted(LR_PERIOD_ALIASES, key=lambda item: -len(item[0])):
+        if lowered == alias or lowered.startswith(f"{alias} "):
+            return QueryAction(query_type="reminders_list", period=period)
+
+    raise ParserError(
+        "Período no reconocido. Ej: /lr mañana, /lr semana, /lr mes, /lr 1/6/26-15/6/26"
+    )
+
+
+def _dmy_groups_to_date(day_s: str, month_s: str, year_s: str) -> date:
+    day, month = int(day_s), int(month_s)
+    year = int(year_s)
+    if year < 100:
+        year += 2000
+    try:
+        return date(year, month, day)
+    except ValueError as exc:
+        raise ParserError("La fecha del rango no es válida") from exc
 
 
 def _first_word(text: str, field_name: str) -> str:

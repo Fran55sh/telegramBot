@@ -5,7 +5,7 @@ import pytest
 from app.config import Settings
 from app.errors import ParserError
 from app.fallback import parse_fallback_command
-from app.schemas import ExpenseAction, IncomeAction, ReminderAction
+from app.schemas import ExpenseAction, IncomeAction, QueryAction, ReminderAction
 
 
 def test_expense_fallback_supports_lucas():
@@ -44,6 +44,35 @@ def test_reminder_fallback_trailing_dmy():
     assert isinstance(action, ReminderAction)
     assert action.datetime == datetime(2026, 6, 25, 9, 0)
     assert action.text == "turno dni"
+
+
+def test_list_reminders_fallback_tomorrow():
+    settings = Settings()
+    action = parse_fallback_command("/lr mañana", datetime(2026, 5, 9, 12, 0), settings)
+
+    assert isinstance(action, QueryAction)
+    assert action.query_type == "reminders_list"
+    assert action.period == "tomorrow"
+
+
+def test_list_reminders_fallback_date_range():
+    settings = Settings()
+    action = parse_fallback_command(
+        "/lr 1/6/26-15/6/26", datetime(2026, 5, 9, 12, 0), settings
+    )
+
+    assert isinstance(action, QueryAction)
+    assert action.period == "range"
+    assert action.date_from.isoformat() == "2026-06-01"
+    assert action.date_to.isoformat() == "2026-06-15"
+
+
+def test_list_reminders_fallback_empty_is_all():
+    settings = Settings()
+    action = parse_fallback_command("/lr", datetime(2026, 5, 9, 12, 0), settings)
+
+    assert isinstance(action, QueryAction)
+    assert action.period == "all"
 
 
 def test_reminder_fallback_past_explicit_date_rejected():

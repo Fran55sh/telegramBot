@@ -177,7 +177,7 @@ Response is `json.loads`’d to a dict, then **`validate_action()`** in `schemas
 | `reminders_list` | Up to 10 pending reminders (`is_sent=False`, `remind_at >= now`), optional period window |
 | `notes_search` | Up to 5 notes, optional `text` filter (`ILIKE`) |
 
-**Periods** (`_date_range` in `actions.py`): `today`, `week` (week starts Monday), `current_month` / `month`, `all` (no date filter for money aggregates).
+**Periods** (`resolve_date_range` in `periods.py`): `today`, `tomorrow`, `week`, `next_week`, `current_month` / `month`, `next_month`, `all`, `range` (with `date_from` / `date_to` inclusive). Week starts Monday. Used for money aggregates and `reminders_list`. Slash **`/lr`** lists pending reminders without LLM (e.g. `/lr mañana`, `/lr 1/6/26-15/6/26`).
 
 ---
 

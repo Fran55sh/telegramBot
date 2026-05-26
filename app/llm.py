@@ -26,6 +26,8 @@ STRUCTURED_OUTPUT_SCHEMA: dict[str, Any] = {
         "tags",
         "query_type",
         "period",
+        "date_from",
+        "date_to",
     ],
     "properties": {
         "intent": {
@@ -65,11 +67,23 @@ STRUCTURED_OUTPUT_SCHEMA: dict[str, Any] = {
             "anyOf": [
                 {
                     "type": "string",
-                    "enum": ["today", "week", "current_month", "month", "all"],
+                    "enum": [
+                        "today",
+                        "tomorrow",
+                        "week",
+                        "next_week",
+                        "current_month",
+                        "month",
+                        "next_month",
+                        "all",
+                        "range",
+                    ],
                 },
                 {"type": "null"},
             ]
         },
+        "date_from": {"anyOf": [{"type": "string"}, {"type": "null"}]},
+        "date_to": {"anyOf": [{"type": "string"}, {"type": "null"}]},
     },
 }
 
@@ -82,7 +96,7 @@ Intenciones:
 - income: ingresos. Campos: amount, source, date, description.
 - reminder: recordatorios/eventos. Campos: datetime, text.
 - note: notas o ideas. Campos: text, tags.
-- query: preguntas sobre datos guardados. Campos: query_type, period, text.
+- query: preguntas sobre datos guardados. Campos: query_type, period, date_from, date_to, text.
 - unknown: si no hay suficiente información.
 
 Reglas:
@@ -94,7 +108,10 @@ Reglas:
 - description conserva el detalle útil del mensaje.
 - Para notas, tags debe ser una lista corta de etiquetas en minúscula.
 - query_type válido: expenses_total, incomes_total, balance, reminders_list, notes_search.
-- period válido: today, week, current_month, month, all. Si no está claro, usá current_month para dinero y all para recordatorios/notas.
+- period válido: today, tomorrow, week, next_week, current_month, month, next_month, all, range.
+  Para recordatorios: mañana→tomorrow, esta semana→week, próxima semana→next_week, este mes→current_month.
+  Si piden un rango explícito (ej. del 1 al 15 de junio), usá period=range con date_from y date_to en YYYY-MM-DD.
+  Si no está claro, usá current_month para dinero y all para recordatorios/notas.
 - Campos no usados deben ir como null, salvo tags que puede ser null.
 """
 

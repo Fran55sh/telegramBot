@@ -21,3 +21,13 @@ def test_llm_disabled_allows_fallback_commands():
 
     action = asyncio.run(parser.parse_message("/g 100 pan"))
     assert action.intent == "expense"
+
+
+def test_llm_disabled_allows_list_reminders_command():
+    settings = Settings(enable_llm_parser=False)
+    parser = MessageParser(settings)
+
+    action = asyncio.run(parser.parse_message("/lr semana"))
+    assert action.intent == "query"
+    assert action.query_type == "reminders_list"
+    assert action.period == "week"

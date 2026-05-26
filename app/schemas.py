@@ -17,7 +17,17 @@ QueryType = Literal[
     "notes_search",
     "unknown",
 ]
-Period = Literal["today", "week", "current_month", "month", "all"]
+Period = Literal[
+    "today",
+    "tomorrow",
+    "week",
+    "next_week",
+    "current_month",
+    "month",
+    "next_month",
+    "all",
+    "range",
+]
 
 
 class RawParsedMessage(BaseModel):
@@ -34,6 +44,8 @@ class RawParsedMessage(BaseModel):
     tags: list[str] | None = None
     query_type: QueryType | None = None
     period: Period | None = None
+    date_from: str | None = None
+    date_to: str | None = None
 
     @field_validator("amount")
     @classmethod
@@ -75,6 +87,8 @@ class QueryAction(BaseModel):
     intent: Literal["query"] = "query"
     query_type: QueryType
     period: Period = "current_month"
+    date_from: date | None = None
+    date_to: date | None = None
     text: str | None = None
 
 
@@ -141,9 +155,24 @@ def validate_action(data: dict | RawParsedMessage, now: datetime, settings: Sett
         if raw.query_type is None or raw.query_type == "unknown":
             raise ParserError("Missing required field: query_type")
         default_period = "all" if raw.query_type in {"reminders_list", "notes_search"} else "current_month"
+        period = raw.period or default_period
+        date_from: date | None = None
+        date_to: date | None = None
+        if period == "range":
+            if not raw.date_from or not raw.date_to:
+                raise ParserError("Missing date_from/date_to for range period")
+            try:
+                date_from = parse_iso_date(raw.date_from)
+                date_to = parse_iso_date(raw.date_to)
+            except ValueError as exc:
+                raise ParserError("Invalid date range; expected YYYY-MM-DD") from exc
+            if date_to < date_from:
+                raise ParserError("date_to must not be before date_from")
         return QueryAction(
             query_type=raw.query_type,
-            period=raw.period or default_period,
+            period=period,
+            date_from=date_from,
+            date_to=date_to,
             text=raw.text.strip() if raw.text else None,
         )
 

@@ -1,4 +1,4 @@
-from datetime import date, datetime, timedelta
+from datetime import date, datetime
 from decimal import Decimal
 
 from sqlalchemy import func, select
@@ -6,6 +6,7 @@ from sqlalchemy.orm import Session
 
 from app.config import Settings
 from app.models import Expense, Income, Note, Reminder
+from app.periods import period_label, resolve_date_range
 from app.schemas import Action, ExpenseAction, IncomeAction, NoteAction, QueryAction, ReminderAction
 from app.utils import format_datetime, format_money, local_now, to_naive_local
 
@@ -85,7 +86,12 @@ class ActionService:
             return f"Balance: {format_money(incomes - expenses)}."
 
         if action.query_type == "reminders_list":
-            return self._list_reminders(chat_id, action.period)
+            return self._list_reminders(
+                chat_id,
+                action.period,
+                date_from=action.date_from,
+                date_to=action.date_to,
+            )
 
         if action.query_type == "notes_search":
             return self._list_notes(chat_id, action.text)
@@ -94,13 +100,20 @@ class ActionService:
 
     def _sum_money(self, chat_id: int, model, period: str) -> Decimal:
         stmt = select(func.coalesce(func.sum(model.amount), 0)).where(model.chat_id == chat_id)
-        date_range = _date_range(period, local_now(self.settings).date())
+        date_range = resolve_date_range(period, local_now(self.settings).date())
         if date_range:
             start, end = date_range
             stmt = stmt.where(model.date >= start, model.date < end)
         return Decimal(self.db.execute(stmt).scalar_one() or 0)
 
-    def _list_reminders(self, chat_id: int, period: str) -> str:
+    def _list_reminders(
+        self,
+        chat_id: int,
+        period: str,
+        *,
+        date_from: date | None = None,
+        date_to: date | None = None,
+    ) -> str:
         now = to_naive_local(local_now(self.settings), self.settings)
         stmt = (
             select(Reminder)
@@ -108,18 +121,27 @@ class ActionService:
             .order_by(Reminder.remind_at.asc())
             .limit(10)
         )
-        date_range = _date_range(period, now.date())
+        date_range = resolve_date_range(
+            period,
+            now.date(),
+            date_from=date_from,
+            date_to=date_to,
+        )
         if date_range:
             start, end = date_range
             stmt = stmt.where(Reminder.remind_at >= datetime.combine(start, datetime.min.time()))
             stmt = stmt.where(Reminder.remind_at < datetime.combine(end, datetime.min.time()))
 
         reminders = self.db.execute(stmt).scalars().all()
+        label = period_label(period, date_from=date_from, date_to=date_to)
         if not reminders:
-            return "No tenés recordatorios pendientes."
+            if period == "all":
+                return "No tenés recordatorios pendientes."
+            return f"No tenés recordatorios pendientes para {label}."
 
         lines = [f"- {format_datetime(item.remind_at)}: {item.text}" for item in reminders]
-        return "Tus próximos recordatorios:\n" + "\n".join(lines)
+        header = "Tus próximos recordatorios" if period == "all" else f"Recordatorios para {label}"
+        return header + ":\n" + "\n".join(lines)
 
     def _list_notes(self, chat_id: int, search_text: str | None) -> str:
         stmt = select(Note).where(Note.chat_id == chat_id).order_by(Note.created_at.desc()).limit(5)
@@ -135,22 +157,3 @@ class ActionService:
             tags = f" ({', '.join(note.tags)})" if note.tags else ""
             lines.append(f"- {note.text}{tags}")
         return "Notas:\n" + "\n".join(lines)
-
-
-def _date_range(period: str, today: date) -> tuple[date, date] | None:
-    if period == "all":
-        return None
-    if period == "today":
-        return today, today + timedelta(days=1)
-    if period == "week":
-        start = today - timedelta(days=today.weekday())
-        return start, start + timedelta(days=7)
-    if period in {"current_month", "month"}:
-        start = today.replace(day=1)
-        if start.month == 12:
-            end = start.replace(year=start.year + 1, month=1)
-        else:
-            end = start.replace(month=start.month + 1)
-        return start, end
-
-    return None

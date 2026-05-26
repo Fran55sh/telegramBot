@@ -133,6 +133,7 @@ async def telegram_webhook(
         response_text = (
             "Hola. Usá comandos: /g importe categoría (gasto), /i importe origen (ingreso), "
             "/r texto [fecha u hora] (recordatorio; fecha al final tipo 25/6/26).\n"
+            "/lr [hoy|mañana|semana|mes|1/6/26-15/6/26] (listar recordatorios pendientes).\n"
             "/get muestra suma histórica de ingresos y egresos.\n"
             "Lenguaje natural: requiere ENABLE_LLM_PARSER en el servidor (v2.0)."
         )
