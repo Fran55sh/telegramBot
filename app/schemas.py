@@ -6,6 +6,7 @@ from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 from app.config import Settings
 from app.errors import ParserError
+from app.expense_categories import normalize_expense_category
 from app.utils import parse_iso_date, parse_iso_datetime, to_naive_local
 
 Intent = Literal["expense", "income", "reminder", "note", "query", "unknown"]
@@ -119,7 +120,7 @@ def validate_action(data: dict | RawParsedMessage, now: datetime, settings: Sett
             raise ParserError("Missing required field: amount")
         return ExpenseAction(
             amount=raw.amount,
-            category=_require_text(raw.category, "category").lower(),
+            category=normalize_expense_category(_require_text(raw.category, "category")),
             date=_parse_action_date(raw.date, today),
             description=raw.description.strip() if raw.description else None,
         )

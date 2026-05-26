@@ -1,3 +1,4 @@
+from collections import defaultdict
 from datetime import date, datetime
 from decimal import Decimal
 
@@ -5,10 +6,17 @@ from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from app.config import Settings
+from app.expense_categories import (
+    format_expense_groups_report,
+    group_for_subcategory,
+    normalize_expense_category,
+    subcategory_display,
+)
 from app.models import Expense, Income, Note, Reminder
+from app.months import month_range, month_title, parse_month_arg
 from app.periods import period_label, resolve_date_range
 from app.schemas import Action, ExpenseAction, IncomeAction, NoteAction, QueryAction, ReminderAction
-from app.utils import format_datetime, format_money, local_now, to_naive_local
+from app.utils import format_date, format_datetime, format_money, local_now, to_naive_local
 
 
 class ActionService:
@@ -16,11 +24,55 @@ class ActionService:
         self.db = db
         self.settings = settings
 
-    def format_lifetime_totals(self, chat_id: int) -> str:
-        """Sum all incomes and expenses for chat (no period filter)."""
-        ingresos = self._sum_money(chat_id, Income, "all")
-        egresos = self._sum_money(chat_id, Expense, "all")
-        return f"Ingresos: {format_money(ingresos)}\nEgresos: {format_money(egresos)}"
+    def format_monthly_report(self, chat_id: int, month_arg: str = "") -> str:
+        today = local_now(self.settings).date()
+        year, month = parse_month_arg(month_arg, today)
+        start, end = month_range(year, month)
+        title = month_title(year, month)
+
+        incomes = self._list_incomes(chat_id, start, end)
+        expenses = self._list_expenses(chat_id, start, end)
+
+        if not incomes and not expenses:
+            return f"No hay movimientos en {title}."
+
+        total_in = sum((i.amount for i in incomes), Decimal(0))
+        total_out = sum((e.amount for e in expenses), Decimal(0))
+
+        lines = [f"📅 {title}", ""]
+        lines.append(f"💰 Ingresos: {format_money(total_in)}")
+        if incomes:
+            for item in incomes:
+                detail = f" — {item.description}" if item.description else ""
+                lines.append(
+                    f"• {format_date(item.date)} {format_money(item.amount)} {item.source}{detail}"
+                )
+        else:
+            lines.append("• (sin ingresos)")
+
+        lines.append("")
+        lines.append(f"💸 Egresos: {format_money(total_out)}")
+        if expenses:
+            grouped_amounts: dict[str, dict[str, Decimal]] = defaultdict(lambda: defaultdict(Decimal))
+            for item in expenses:
+                group = group_for_subcategory(item.category)
+                grouped_amounts[group][item.category] += item.amount
+
+            lines.extend(format_expense_groups_report(grouped_amounts))
+            lines.append("")
+            lines.append("Detalle:")
+            for item in expenses:
+                cat = subcategory_display(item.category)
+                detail = f" — {item.description}" if item.description else ""
+                lines.append(
+                    f"• {format_date(item.date)} {format_money(item.amount)} [{cat}]{detail}"
+                )
+        else:
+            lines.append("• (sin egresos)")
+
+        lines.append("")
+        lines.append(f"Balance: {format_money(total_in - total_out)}")
+        return "\n".join(lines)
 
     def execute(self, chat_id: int, action: Action) -> str:
         if isinstance(action, ExpenseAction):
@@ -36,16 +88,21 @@ class ActionService:
         raise ValueError("Unsupported action")
 
     def _create_expense(self, chat_id: int, action: ExpenseAction) -> str:
+        category = normalize_expense_category(action.category)
         expense = Expense(
             chat_id=chat_id,
             amount=action.amount,
-            category=action.category,
+            category=category,
             date=action.date,
             description=action.description,
         )
         self.db.add(expense)
         self.db.commit()
-        return f"Listo, guardé {format_money(action.amount)} en {action.category}."
+        cat_label = subcategory_display(category)
+        return (
+            f"Listo, guardé {format_money(action.amount)} en {cat_label} "
+            f"({format_date(action.date)})."
+        )
 
     def _create_income(self, chat_id: int, action: IncomeAction) -> str:
         income = Income(
@@ -57,7 +114,10 @@ class ActionService:
         )
         self.db.add(income)
         self.db.commit()
-        return f"Listo, guardé ingreso de {format_money(action.amount)} por {action.source}."
+        return (
+            f"Listo, guardé ingreso de {format_money(action.amount)} por {action.source} "
+            f"({format_date(action.date)})."
+        )
 
     def _create_reminder(self, chat_id: int, action: ReminderAction) -> str:
         reminder = Reminder(chat_id=chat_id, remind_at=action.datetime, text=action.text)
@@ -97,6 +157,22 @@ class ActionService:
             return self._list_notes(chat_id, action.text)
 
         return "No pude responder esa consulta."
+
+    def _list_incomes(self, chat_id: int, start: date, end: date) -> list[Income]:
+        stmt = (
+            select(Income)
+            .where(Income.chat_id == chat_id, Income.date >= start, Income.date < end)
+            .order_by(Income.date.asc(), Income.id.asc())
+        )
+        return list(self.db.execute(stmt).scalars().all())
+
+    def _list_expenses(self, chat_id: int, start: date, end: date) -> list[Expense]:
+        stmt = (
+            select(Expense)
+            .where(Expense.chat_id == chat_id, Expense.date >= start, Expense.date < end)
+            .order_by(Expense.date.asc(), Expense.id.asc())
+        )
+        return list(self.db.execute(stmt).scalars().all())
 
     def _sum_money(self, chat_id: int, model, period: str) -> Decimal:
         stmt = select(func.coalesce(func.sum(model.amount), 0)).where(model.chat_id == chat_id)

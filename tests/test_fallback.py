@@ -10,11 +10,35 @@ from app.schemas import ExpenseAction, IncomeAction, QueryAction, ReminderAction
 
 def test_expense_fallback_supports_lucas():
     settings = Settings()
-    action = parse_fallback_command("/g 12 lucas tornillos", datetime(2026, 5, 9, 12, 0), settings)
+    action = parse_fallback_command("/g 12 lucas supermercado", datetime(2026, 5, 9, 12, 0), settings)
 
     assert isinstance(action, ExpenseAction)
     assert action.amount == 12000
-    assert action.category == "tornillos"
+    assert action.category == "supermercado"
+
+
+def test_expense_fallback_trailing_date_and_category():
+    settings = Settings()
+    action = parse_fallback_command(
+        "/g 5000 supermercado compra 25/5/26", datetime(2026, 5, 9, 12, 0), settings
+    )
+
+    assert isinstance(action, ExpenseAction)
+    assert action.amount == 5000
+    assert action.category == "supermercado"
+    assert action.date.isoformat() == "2026-05-25"
+    assert action.description == "compra"
+
+
+def test_income_fallback_trailing_date():
+    settings = Settings()
+    action = parse_fallback_command(
+        "/i 1000 sueldo 25/5/26", datetime(2026, 5, 9, 12, 0), settings
+    )
+
+    assert isinstance(action, IncomeAction)
+    assert action.date.isoformat() == "2026-05-25"
+    assert action.source == "sueldo"
 
 
 def test_income_fallback_supports_mil():

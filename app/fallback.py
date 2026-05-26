@@ -4,6 +4,7 @@ from decimal import Decimal
 
 from app.config import Settings
 from app.errors import ParserError
+from app.expense_categories import parse_category_from_text
 from app.schemas import ExpenseAction, IncomeAction, QueryAction, ReminderAction
 from app.utils import parse_decimal, to_naive_local
 
@@ -69,15 +70,29 @@ def parse_fallback_command(text: str, now: datetime, settings: Settings):
 
     if command.lower() == "/g":
         amount, rest = _extract_amount(body)
-        tx_date, rest = _extract_relative_date(rest, now_naive)
-        category = _first_word(rest, "category")
-        return ExpenseAction(amount=amount, category=category.lower(), date=tx_date, description=rest)
+        tx_date, rest = _extract_tx_date(rest, now_naive)
+        try:
+            category, description = parse_category_from_text(rest)
+        except ValueError as exc:
+            raise ParserError("Falta la categoría del gasto") from exc
+        return ExpenseAction(
+            amount=amount,
+            category=category,
+            date=tx_date,
+            description=description,
+        )
 
     if command.lower() == "/i":
         amount, rest = _extract_amount(body)
-        tx_date, rest = _extract_relative_date(rest, now_naive)
+        tx_date, rest = _extract_tx_date(rest, now_naive)
         source = _first_word(rest, "source")
-        return IncomeAction(amount=amount, source=source.lower(), date=tx_date, description=rest)
+        description = " ".join(rest.split()[1:]).strip() or None
+        return IncomeAction(
+            amount=amount,
+            source=source.lower(),
+            date=tx_date,
+            description=description,
+        )
 
     if command.lower() == "/r":
         remind_at, reminder_text = _parse_reminder_body(body, now_naive)
@@ -111,6 +126,14 @@ def _extract_amount(body: str) -> tuple[Decimal, str]:
     if not rest:
         raise ParserError("Falta una categoría o descripción")
     return amount, rest
+
+
+def _extract_tx_date(text: str, now: datetime) -> tuple[date, str]:
+    explicit = _extract_trailing_dmy(text)
+    if explicit is not None:
+        return explicit
+    tx_date, rest = _extract_relative_date(text, now)
+    return tx_date, rest
 
 
 def _extract_relative_date(text: str, now: datetime) -> tuple:

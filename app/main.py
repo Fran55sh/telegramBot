@@ -131,10 +131,11 @@ async def telegram_webhook(
     cmd = resolved_slash_command(message, text)
     if cmd in {"/start", "/help"}:
         response_text = (
-            "Hola. Usá comandos: /g importe categoría (gasto), /i importe origen (ingreso), "
-            "/r texto [fecha u hora] (recordatorio; fecha al final tipo 25/6/26).\n"
+            "Hola. Comandos: /g gasto, /i ingreso, /r recordatorio,\n"
             "/lr [hoy|mañana|semana|mes|1/6/26-15/6/26] (listar recordatorios pendientes).\n"
-            "/get muestra suma histórica de ingresos y egresos.\n"
+            "/get [mes] resumen del mes (ej. /get, /get mayo, /get 5/2026).\n"
+            "/g importe categoría [fecha] — fecha al final tipo 25/5/26 o hoy/ayer.\n"
+            "/i importe origen [fecha] — igual que /g.\n"
             "Lenguaje natural: requiere ENABLE_LLM_PARSER en el servidor (v2.0)."
         )
         await telegram.send_message(chat_id, response_text)
@@ -142,7 +143,13 @@ async def telegram_webhook(
         return {"ok": True}
 
     if cmd == "/get":
-        response_text = ActionService(db, settings).format_lifetime_totals(chat_id)
+        _, _, get_body = text.partition(" ")
+        try:
+            response_text = ActionService(db, settings).format_monthly_report(
+                chat_id, get_body.strip()
+            )
+        except ParserError as exc:
+            response_text = str(exc)
         await telegram.send_message(chat_id, response_text)
         logger.info("telegram_response chat_id=%s text=%r", chat_id, response_text)
         return {"ok": True}
