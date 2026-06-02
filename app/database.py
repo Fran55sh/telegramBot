@@ -38,8 +38,17 @@ SessionLocal = sessionmaker(bind=engine, autoflush=False, autocommit=False, futu
 def init_db() -> None:
     # Import models before create_all so SQLAlchemy registers their metadata.
     from app import models  # noqa: F401
+    from app.migrations import run_migrations
+    from app.services.categories import seed_default_categories
 
     Base.metadata.create_all(bind=engine)
+    run_migrations(engine)
+
+    db = SessionLocal()
+    try:
+        seed_default_categories(db)
+    finally:
+        db.close()
 
 
 def get_db() -> Generator[Session, None, None]:

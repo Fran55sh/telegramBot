@@ -1,0 +1,416 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="es-AR"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Hoy - Asistente de Finanzas</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=Geist:wght@400;500;600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "primary-container": "#6d28d9",
+                    "secondary-fixed-dim": "#adc6ff",
+                    "on-secondary-fixed": "#001a42",
+                    "on-primary": "#3f008d",
+                    "on-primary-fixed-variant": "#5b00c5",
+                    "secondary-container": "#0566d9",
+                    "tertiary": "#4edea3",
+                    "secondary": "#adc6ff",
+                    "primary": "#d3bbff",
+                    "outline": "#958da1",
+                    "surface-container": "#171f33",
+                    "on-tertiary-fixed": "#002113",
+                    "on-primary-container": "#dac5ff",
+                    "inverse-on-surface": "#283044",
+                    "on-secondary-fixed-variant": "#004395",
+                    "on-error-container": "#ffdad6",
+                    "on-surface-variant": "#ccc3d7",
+                    "on-background": "#dae2fd",
+                    "tertiary-container": "#006544",
+                    "surface-container-low": "#131b2e",
+                    "surface": "#0b1326",
+                    "on-secondary-container": "#e6ecff",
+                    "on-secondary": "#002e6a",
+                    "outline-variant": "#4a4455",
+                    "on-tertiary-container": "#58e7ab",
+                    "surface-dim": "#0b1326",
+                    "on-error": "#690005",
+                    "error-container": "#93000a",
+                    "primary-fixed": "#ebddff",
+                    "on-tertiary-fixed-variant": "#005236",
+                    "surface-variant": "#2d3449",
+                    "error": "#ffb4ab",
+                    "primary-fixed-dim": "#d3bbff",
+                    "inverse-surface": "#dae2fd",
+                    "on-primary-fixed": "#250059",
+                    "surface-container-high": "#222a3d",
+                    "surface-tint": "#d3bbff",
+                    "surface-bright": "#31394d",
+                    "surface-container-highest": "#2d3449",
+                    "background": "#0b1326",
+                    "on-surface": "#dae2fd",
+                    "on-tertiary": "#003824",
+                    "tertiary-fixed-dim": "#4edea3",
+                    "inverse-primary": "#7331df",
+                    "surface-container-lowest": "#060e20",
+                    "secondary-fixed": "#d8e2ff",
+                    "tertiary-fixed": "#6ffbbe"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.25rem",
+                    "lg": "0.5rem",
+                    "xl": "0.75rem",
+                    "full": "9999px"
+            },
+            "spacing": {
+                    "base": "4px",
+                    "md": "16px",
+                    "lg": "24px",
+                    "xs": "4px",
+                    "gutter": "16px",
+                    "sm": "8px",
+                    "xl": "40px",
+                    "container-margin": "20px"
+            },
+            "fontFamily": {
+                    "display-lg": ["Inter"],
+                    "currency-display": ["Geist"],
+                    "title-md": ["Inter"],
+                    "headline-lg-mobile": ["Inter"],
+                    "body-lg": ["Inter"],
+                    "label-caps": ["Geist"],
+                    "headline-lg": ["Inter"],
+                    "body-sm": ["Inter"]
+            },
+            "fontSize": {
+                    "display-lg": ["48px", {"lineHeight": "56px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                    "currency-display": ["32px", {"lineHeight": "40px", "fontWeight": "500"}],
+                    "title-md": ["20px", {"lineHeight": "28px", "fontWeight": "600"}],
+                    "headline-lg-mobile": ["28px", {"lineHeight": "36px", "fontWeight": "700"}],
+                    "body-lg": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                    "label-caps": ["12px", {"lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "600"}],
+                    "headline-lg": ["32px", {"lineHeight": "40px", "letterSpacing": "-0.01em", "fontWeight": "700"}],
+                    "body-sm": ["14px", {"lineHeight": "20px", "fontWeight": "400"}]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        body {
+            background-color: #0b1326;
+            color: #dae2fd;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .glass-card {
+            background: rgba(30, 41, 59, 0.6);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(51, 65, 85, 0.5);
+        }
+        .custom-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .custom-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+        .glow-violet {
+            box-shadow: 0 0 40px -10px rgba(109, 40, 217, 0.3);
+        }
+        .chart-container {
+            position: relative;
+            width: 140px;
+            height: 140px;
+        }
+        svg.donut {
+            transform: rotate(-90deg);
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="font-body-lg text-body-lg selection:bg-primary-container selection:text-on-primary-container min-h-screen pb-32">
+<!-- TopAppBar -->
+<header class="bg-surface/80 backdrop-blur-xl docked full-width top-0 sticky flex justify-between items-center px-gutter h-16 w-full z-40">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-full overflow-hidden border-2 border-primary/20">
+<img alt="User Avatar" class="w-full h-full object-cover" data-alt="A professional close-up portrait of a tech-savvy user for a digital profile. The lighting is soft and cinematic with subtle violet and blue rim lights reflecting the app's primary color palette. The background is a blurred high-tech interior, maintaining a modern dark-mode corporate aesthetic." src="https://lh3.googleusercontent.com/aida-public/AB6AXuC_2SLcuxHU3-ohKjKSQvs7tKxBARvxiYt0u-oskI0mLK6eN3Ll9ZxM4Wez8XqslJJcfVVWbQ0Hu-XY8qB3updMU3rhRnzxarJbuWnVLk-akfZUqoIXp7oamptebMFYsJdi9MPPF9Fn9NBeorBciNTiHQ4NyKoMSK-iIVxdb1jS3OHymrhXA1Eh5E9Z8drQFHFUGIMlN7NmUgrt0auEWaaTcU0Aa9YBMN2honhd-XQWpN0W4K3sm0QllZdhhIRNevvrve0vxdGb9ycA"/>
+</div>
+<h1 class="font-headline-lg-mobile text-headline-lg-mobile text-primary dark:text-primary-fixed">Hoy</h1>
+</div>
+<button class="w-10 h-10 flex items-center justify-center rounded-full text-on-surface-variant hover:bg-surface-bright/10 active:scale-95 transition-transform">
+<span class="material-symbols-outlined">notifications</span>
+</button>
+</header>
+<main class="max-w-[1200px] mx-auto px-gutter pt-6 space-y-8">
+<!-- Hero Balance Card -->
+<section class="relative group">
+<div class="absolute inset-0 bg-gradient-to-br from-primary-container to-secondary-container blur-3xl opacity-20 -z-10 transition-opacity group-hover:opacity-30"></div>
+<div class="glass-card rounded-xl p-lg flex flex-col gap-4 glow-violet">
+<div class="flex justify-between items-start">
+<span class="font-label-caps text-label-caps text-on-surface-variant">BALANCE TOTAL</span>
+<span class="flex items-center gap-1 text-tertiary font-medium text-body-sm bg-tertiary-container/20 px-2 py-0.5 rounded-full">
+<span class="material-symbols-outlined text-[16px]">trending_up</span>
+                        +12.4%
+                    </span>
+</div>
+<div class="space-y-1">
+<h2 class="font-currency-display text-currency-display text-on-surface">
+<span class="opacity-50">$</span> 1.240.500,00
+                    </h2>
+<p class="text-body-sm text-on-surface-variant">Actualizado hace 2 minutos</p>
+</div>
+<div class="h-1 bg-surface-container rounded-full overflow-hidden">
+<div class="h-full bg-gradient-to-r from-secondary-fixed-dim to-tertiary" style="width: 65%"></div>
+</div>
+</div>
+</section>
+<!-- Quick Actions -->
+<section>
+<div class="flex items-center justify-between mb-4">
+<h3 class="font-title-md text-title-md">Acciones Rápidas</h3>
+</div>
+<div class="flex gap-4 overflow-x-auto custom-scrollbar pb-2 -mx-gutter px-gutter">
+<button class="flex-shrink-0 flex items-center gap-3 bg-primary-container text-on-primary-container px-6 py-4 rounded-full active:scale-95 transition-transform font-semibold shadow-lg shadow-primary-container/20">
+<span class="material-symbols-outlined">add_circle</span>
+                    Nuevo Gasto
+                </button>
+<button class="flex-shrink-0 flex items-center gap-3 glass-card text-on-surface px-6 py-4 rounded-full active:scale-95 transition-transform font-semibold">
+<span class="material-symbols-outlined">payments</span>
+                    Ingreso
+                </button>
+<button class="flex-shrink-0 flex items-center gap-3 glass-card text-on-surface px-6 py-4 rounded-full active:scale-95 transition-transform font-semibold">
+<span class="material-symbols-outlined">description</span>
+                    Nota
+                </button>
+<button class="flex-shrink-0 flex items-center gap-3 glass-card text-on-surface px-6 py-4 rounded-full active:scale-95 transition-transform font-semibold">
+<span class="material-symbols-outlined">swap_horiz</span>
+                    Transferir
+                </button>
+</div>
+</section>
+<!-- Bento Layout: Insights & Reminders -->
+<div class="grid grid-cols-1 md:grid-cols-12 gap-6">
+<!-- Expenses Chart -->
+<section class="md:col-span-7 glass-card rounded-xl p-lg space-y-6">
+<div class="flex items-center justify-between">
+<h3 class="font-title-md text-title-md">Gastos por Categoría</h3>
+<button class="text-primary text-body-sm font-medium">Ver detalles</button>
+</div>
+<div class="flex flex-col sm:flex-row items-center gap-8">
+<div class="chart-container">
+<svg class="donut w-full h-full" viewbox="0 0 42 42">
+<circle class="donut-hole" cx="21" cy="21" fill="transparent" r="15.915"></circle>
+<circle class="donut-ring" cx="21" cy="21" fill="transparent" r="15.915" stroke="#171f33" stroke-width="4"></circle>
+<!-- Food 40% -->
+<circle class="donut-segment" cx="21" cy="21" fill="transparent" r="15.915" stroke="#6d28d9" stroke-dasharray="40 60" stroke-dashoffset="0" stroke-width="4"></circle>
+<!-- Transport 25% -->
+<circle class="donut-segment" cx="21" cy="21" fill="transparent" r="15.915" stroke="#0566d9" stroke-dasharray="25 75" stroke-dashoffset="-40" stroke-width="4"></circle>
+<!-- Services 15% -->
+<circle class="donut-segment" cx="21" cy="21" fill="transparent" r="15.915" stroke="#4edea3" stroke-dasharray="15 85" stroke-dashoffset="-65" stroke-width="4"></circle>
+</svg>
+<div class="absolute inset-0 flex flex-col items-center justify-center">
+<span class="text-xs text-on-surface-variant font-label-caps">TOTAL</span>
+<span class="font-bold text-lg">$45k</span>
+</div>
+</div>
+<div class="flex-1 grid grid-cols-2 gap-4 w-full">
+<div class="flex items-center gap-2">
+<div class="w-3 h-3 rounded-full bg-primary-container"></div>
+<div class="flex flex-col">
+<span class="text-body-sm font-medium">Comida</span>
+<span class="text-xs text-on-surface-variant">$18.200</span>
+</div>
+</div>
+<div class="flex items-center gap-2">
+<div class="w-3 h-3 rounded-full bg-secondary-container"></div>
+<div class="flex flex-col">
+<span class="text-body-sm font-medium">Transporte</span>
+<span class="text-xs text-on-surface-variant">$11.450</span>
+</div>
+</div>
+<div class="flex items-center gap-2">
+<div class="w-3 h-3 rounded-full bg-tertiary"></div>
+<div class="flex flex-col">
+<span class="text-body-sm font-medium">Servicios</span>
+<span class="text-xs text-on-surface-variant">$6.750</span>
+</div>
+</div>
+<div class="flex items-center gap-2">
+<div class="w-3 h-3 rounded-full bg-outline-variant"></div>
+<div class="flex flex-col">
+<span class="text-body-sm font-medium">Otros</span>
+<span class="text-xs text-on-surface-variant">$8.600</span>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- Upcoming Reminders -->
+<section class="md:col-span-5 glass-card rounded-xl p-lg space-y-4">
+<div class="flex items-center justify-between">
+<h3 class="font-title-md text-title-md">Recordatorios</h3>
+<span class="bg-error-container text-on-error-container text-[10px] px-2 py-0.5 rounded-full font-bold">3 HOY</span>
+</div>
+<div class="space-y-3">
+<div class="flex items-center gap-4 p-3 bg-surface-container-low rounded-xl border border-outline-variant/10">
+<div class="w-10 h-10 rounded-lg bg-error-container/20 flex items-center justify-center text-error">
+<span class="material-symbols-outlined">bolt</span>
+</div>
+<div class="flex-1">
+<p class="text-body-sm font-semibold">Edesur S.A.</p>
+<p class="text-xs text-on-surface-variant">Vence en 2 horas</p>
+</div>
+<span class="font-bold text-body-sm">$4.500</span>
+</div>
+<div class="flex items-center gap-4 p-3 bg-surface-container-low rounded-xl border border-outline-variant/10">
+<div class="w-10 h-10 rounded-lg bg-primary-container/20 flex items-center justify-center text-primary">
+<span class="material-symbols-outlined">wifi</span>
+</div>
+<div class="flex-1">
+<p class="text-body-sm font-semibold">Internet Fibertel</p>
+<p class="text-xs text-on-surface-variant">Mañana, 09:00</p>
+</div>
+<span class="font-bold text-body-sm">$12.300</span>
+</div>
+<div class="flex items-center gap-4 p-3 bg-surface-container-low rounded-xl border border-outline-variant/10">
+<div class="w-10 h-10 rounded-lg bg-tertiary-container/20 flex items-center justify-center text-tertiary">
+<span class="material-symbols-outlined">directions_car</span>
+</div>
+<div class="flex-1">
+<p class="text-body-sm font-semibold">Seguro Auto</p>
+<p class="text-xs text-on-surface-variant">15 de Octubre</p>
+</div>
+<span class="font-bold text-body-sm">$28.900</span>
+</div>
+</div>
+</section>
+</div>
+<!-- Recent Activity -->
+<section class="space-y-4">
+<div class="flex items-center justify-between">
+<h3 class="font-title-md text-title-md">Actividad Reciente</h3>
+<button class="text-primary text-body-sm font-medium">Ver todo</button>
+</div>
+<div class="glass-card rounded-xl overflow-hidden divide-y divide-outline-variant/10">
+<!-- Transaction 1 -->
+<div class="flex items-center gap-4 p-md hover:bg-surface-bright/5 transition-colors group">
+<div class="w-12 h-12 rounded-full bg-surface-container-highest flex items-center justify-center text-on-surface-variant group-hover:scale-110 transition-transform">
+<span class="material-symbols-outlined">shopping_cart</span>
+</div>
+<div class="flex-1">
+<h4 class="font-semibold text-on-surface">Coto Supermercados</h4>
+<p class="text-xs text-on-surface-variant">Hace 45 min • Comida</p>
+</div>
+<div class="text-right">
+<p class="font-bold text-on-surface">-$12.450,20</p>
+<p class="text-[10px] text-tertiary uppercase">Confirmado</p>
+</div>
+</div>
+<!-- Transaction 2 -->
+<div class="flex items-center gap-4 p-md hover:bg-surface-bright/5 transition-colors group">
+<div class="w-12 h-12 rounded-full bg-surface-container-highest flex items-center justify-center text-on-surface-variant group-hover:scale-110 transition-transform">
+<span class="material-symbols-outlined">restaurant</span>
+</div>
+<div class="flex-1">
+<h4 class="font-semibold text-on-surface">Parrilla Don Julio</h4>
+<p class="text-xs text-on-surface-variant">Hoy, 13:20 • Entretenimiento</p>
+</div>
+<div class="text-right">
+<p class="font-bold text-on-surface">-$45.000,00</p>
+<p class="text-[10px] text-on-surface-variant uppercase">Pendiente</p>
+</div>
+</div>
+<!-- Transaction 3 -->
+<div class="flex items-center gap-4 p-md hover:bg-surface-bright/5 transition-colors group">
+<div class="w-12 h-12 rounded-full bg-tertiary-container/20 flex items-center justify-center text-tertiary group-hover:scale-110 transition-transform">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">add_card</span>
+</div>
+<div class="flex-1">
+<h4 class="font-semibold text-on-surface">Transferencia Recibida</h4>
+<p class="text-xs text-on-surface-variant">Ayer, 18:45 • Ingresos</p>
+</div>
+<div class="text-right">
+<p class="font-bold text-tertiary">+$150.000,00</p>
+<p class="text-[10px] text-tertiary uppercase">Completado</p>
+</div>
+</div>
+<!-- Transaction 4 -->
+<div class="flex items-center gap-4 p-md hover:bg-surface-bright/5 transition-colors group">
+<div class="w-12 h-12 rounded-full bg-surface-container-highest flex items-center justify-center text-on-surface-variant group-hover:scale-110 transition-transform">
+<span class="material-symbols-outlined">local_taxi</span>
+</div>
+<div class="flex-1">
+<h4 class="font-semibold text-on-surface">Uber Argentina</h4>
+<p class="text-xs text-on-surface-variant">Ayer, 08:30 • Transporte</p>
+</div>
+<div class="text-right">
+<p class="font-bold text-on-surface">-$3.200,00</p>
+<p class="text-[10px] text-on-surface-variant uppercase">Confirmado</p>
+</div>
+</div>
+<!-- Transaction 5 -->
+<div class="flex items-center gap-4 p-md hover:bg-surface-bright/5 transition-colors group">
+<div class="w-12 h-12 rounded-full bg-surface-container-highest flex items-center justify-center text-on-surface-variant group-hover:scale-110 transition-transform">
+<span class="material-symbols-outlined">coffee</span>
+</div>
+<div class="flex-1">
+<h4 class="font-semibold text-on-surface">Starbucks Palermo</h4>
+<p class="text-xs text-on-surface-variant">Ayer, 07:15 • Comida</p>
+</div>
+<div class="text-right">
+<p class="font-bold text-on-surface">-$5.400,00</p>
+<p class="text-[10px] text-on-surface-variant uppercase">Confirmado</p>
+</div>
+</div>
+</div>
+</section>
+</main>
+<!-- BottomNavBar -->
+<nav class="fixed bottom-0 left-0 w-full z-50 flex justify-around items-center px-4 pb-4 pt-2 backdrop-blur-xl border-t border-outline-variant/20 bg-surface-container/60 dark:bg-surface-container-low/60 rounded-t-xl shadow-lg">
+<button class="flex flex-col items-center justify-center bg-primary-container text-on-primary-container rounded-full px-4 py-1 active:scale-90 transition-all duration-200">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">dashboard</span>
+<span class="font-label-caps text-label-caps">Dashboard</span>
+</button>
+<button class="flex flex-col items-center justify-center text-on-surface-variant hover:text-primary transition-colors active:scale-90 transition-all duration-200">
+<span class="material-symbols-outlined">account_balance_wallet</span>
+<span class="font-label-caps text-label-caps">Finanzas</span>
+</button>
+<button class="flex flex-col items-center justify-center text-on-surface-variant hover:text-primary transition-colors active:scale-90 transition-all duration-200">
+<span class="material-symbols-outlined">event_upcoming</span>
+<span class="font-label-caps text-label-caps">Recordatorios</span>
+</button>
+<button class="flex flex-col items-center justify-center text-on-surface-variant hover:text-primary transition-colors active:scale-90 transition-all duration-200">
+<span class="material-symbols-outlined">description</span>
+<span class="font-label-caps text-label-caps">Notas</span>
+</button>
+</nav>
+<script>
+        // Micro-interaction for currency reveal
+        document.querySelector('.font-currency-display').addEventListener('click', function() {
+            this.style.filter = this.style.filter === 'blur(5px)' ? 'none' : 'blur(5px)';
+            this.style.transition = 'filter 0.3s ease';
+        });
+
+        // Initialize donut chart animations
+        const segments = document.querySelectorAll('.donut-segment');
+        segments.forEach(segment => {
+            const length = segment.getTotalLength();
+            segment.style.strokeDasharray = length;
+            segment.style.strokeDashoffset = length;
+            setTimeout(() => {
+                segment.style.transition = 'stroke-dashoffset 1s ease-out';
+                segment.style.strokeDashoffset = length * (1 - (segment.getAttribute('stroke-dasharray').split(' ')[0] / 100));
+            }, 500);
+        });
+    </script>
+</body></html>

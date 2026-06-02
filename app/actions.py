@@ -80,22 +80,33 @@ class ActionService:
         )
 
     def _create_income(self, chat_id: int, action: IncomeAction) -> str:
+        from app.services.categories import category_label, resolve_category_slug
+
+        source = action.source.strip().lower()
+        category = resolve_category_slug(self.db, chat_id, "income", source)
         income = Income(
             chat_id=chat_id,
             amount=action.amount,
-            source=action.source,
+            category=category,
+            source=source,
             date=action.date,
             description=action.description,
         )
         self.db.add(income)
         self.db.commit()
+        cat_label = category_label(self.db, chat_id, "income", category)
         return (
-            f"Listo, guardé ingreso de {format_money(action.amount)} por {action.source} "
+            f"Listo, guardé ingreso de {format_money(action.amount)} en {cat_label} "
             f"({format_date(action.date)})."
         )
 
     def _create_reminder(self, chat_id: int, action: ReminderAction) -> str:
-        reminder = Reminder(chat_id=chat_id, remind_at=action.datetime, text=action.text)
+        reminder = Reminder(
+            chat_id=chat_id,
+            remind_at=action.datetime,
+            text=action.text,
+            amount=action.amount,
+        )
         self.db.add(reminder)
         self.db.commit()
         return f"Listo, te recuerdo el {format_datetime(action.datetime)}: {action.text}."

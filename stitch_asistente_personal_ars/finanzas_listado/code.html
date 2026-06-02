@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="es-AR"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=Geist:wght@400;500;600&amp;family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@100..900&amp;family=Inter:wght@100..900&amp;display=swap" rel="stylesheet"/>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .glass-card {
+            background: rgba(30, 41, 59, 0.6);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(51, 65, 85, 0.5);
+        }
+        .hide-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .hide-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+    </style>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "primary-container": "#6d28d9",
+                        "secondary-fixed-dim": "#adc6ff",
+                        "on-secondary-fixed": "#001a42",
+                        "on-primary": "#3f008d",
+                        "on-primary-fixed-variant": "#5b00c5",
+                        "secondary-container": "#0566d9",
+                        "tertiary": "#4edea3",
+                        "secondary": "#adc6ff",
+                        "primary": "#d3bbff",
+                        "outline": "#958da1",
+                        "surface-container": "#171f33",
+                        "on-tertiary-fixed": "#002113",
+                        "on-primary-container": "#dac5ff",
+                        "inverse-on-surface": "#283044",
+                        "on-secondary-fixed-variant": "#004395",
+                        "on-error-container": "#ffdad6",
+                        "on-surface-variant": "#ccc3d7",
+                        "on-background": "#dae2fd",
+                        "tertiary-container": "#006544",
+                        "surface-container-low": "#131b2e",
+                        "surface": "#0b1326",
+                        "on-secondary-container": "#e6ecff",
+                        "on-secondary": "#002e6a",
+                        "outline-variant": "#4a4455",
+                        "on-tertiary-container": "#58e7ab",
+                        "surface-dim": "#0b1326",
+                        "on-error": "#690005",
+                        "error-container": "#93000a",
+                        "primary-fixed": "#ebddff",
+                        "on-tertiary-fixed-variant": "#005236",
+                        "surface-variant": "#2d3449",
+                        "error": "#ffb4ab",
+                        "primary-fixed-dim": "#d3bbff",
+                        "inverse-surface": "#dae2fd",
+                        "on-primary-fixed": "#250059",
+                        "surface-container-high": "#222a3d",
+                        "surface-tint": "#d3bbff",
+                        "surface-bright": "#31394d",
+                        "surface-container-highest": "#2d3449",
+                        "background": "#0b1326",
+                        "on-surface": "#dae2fd",
+                        "on-tertiary": "#003824",
+                        "tertiary-fixed-dim": "#4edea3",
+                        "inverse-primary": "#7331df",
+                        "surface-container-lowest": "#060e20",
+                        "secondary-fixed": "#d8e2ff",
+                        "tertiary-fixed": "#6ffbbe"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "base": "4px",
+                        "md": "16px",
+                        "lg": "24px",
+                        "xs": "4px",
+                        "gutter": "16px",
+                        "sm": "8px",
+                        "xl": "40px",
+                        "container-margin": "20px"
+                    },
+                    "fontFamily": {
+                        "display-lg": ["Inter"],
+                        "currency-display": ["Geist"],
+                        "title-md": ["Inter"],
+                        "headline-lg-mobile": ["Inter"],
+                        "body-lg": ["Inter"],
+                        "label-caps": ["Geist"],
+                        "headline-lg": ["Inter"],
+                        "body-sm": ["Inter"]
+                    },
+                    "fontSize": {
+                        "display-lg": ["48px", {"lineHeight": "56px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                        "currency-display": ["32px", {"lineHeight": "40px", "fontWeight": "500"}],
+                        "title-md": ["20px", {"lineHeight": "28px", "fontWeight": "600"}],
+                        "headline-lg-mobile": ["28px", {"lineHeight": "36px", "fontWeight": "700"}],
+                        "body-lg": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                        "label-caps": ["12px", {"lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "600"}],
+                        "headline-lg": ["32px", {"lineHeight": "40px", "letterSpacing": "-0.01em", "fontWeight": "700"}],
+                        "body-sm": ["14px", {"lineHeight": "20px", "fontWeight": "400"}]
+                    }
+                },
+            },
+        }
+    </script>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+</head>
+<body class="bg-background text-on-background min-h-screen font-body-lg flex flex-col items-center">
+<!-- Top AppBar -->
+<header class="bg-surface/80 backdrop-blur-xl flex justify-between items-center px-gutter h-16 w-full z-40 docked full-width top-0 sticky max-w-[1200px]">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-full overflow-hidden border border-primary/20">
+<img alt="Profile" data-alt="A professional close-up studio portrait of a tech-savvy individual with a confident smile. The background is a soft, out-of-focus digital workspace with glowing violet and deep blue atmospheric lighting. The style is modern and clean, emphasizing a high-fidelity 'Digital Wealth' aesthetic through crisp details and cinematic depth of field." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBXMi9nNsUujIgqM9QiJQkPF9Ya2Tbrb5OcBHUXYpr90vcldfGPeNAJbaJAmAyZlptZ6Za6MmoAsteux8RiAfq0tIMFEQHohl6yd89rHvqwSZBqmhRQDToClU7s5G36XkzMMzJszMITWjFU8Z8AJmqfDk5of1bE3T4NUxV5QdJM8UxT7KOdHQTca_PqYRxmjbkxOMfypWCqG0MZpX9duAFn_gi-cSRjyMPGQZaEpyOWn2Dt-BKZFjvjD531OPrDau6B8ikjbv7qHOtD"/>
+</div>
+<h1 class="font-headline-lg-mobile text-headline-lg-mobile text-primary">Hoy</h1>
+</div>
+<button class="material-symbols-outlined text-primary active:scale-95 transition-transform hover:bg-surface-bright/10 p-2 rounded-full">
+            notifications
+        </button>
+</header>
+<main class="w-full max-w-[1200px] flex-1 pb-24 px-gutter">
+<!-- Summary Card with Glassmorphism -->
+<section class="mt-4 mb-8">
+<div class="glass-card rounded-xl p-lg relative overflow-hidden">
+
+<div class="relative z-10">
+<p class="font-label-caps text-label-caps text-on-surface-variant mb-2">BALANCE TOTAL</p>
+<h2 class="font-currency-display text-currency-display text-white">$ 450.280,00</h2>
+<div class="flex gap-4 mt-4">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-tertiary text-sm">arrow_upward</span>
+<span class="text-body-sm text-tertiary">+$ 12.400</span>
+</div>
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-error text-sm">arrow_downward</span>
+<span class="text-body-sm text-error">-$ 8.900</span>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- Search and Filters -->
+<section class="mb-6 space-y-4">
+<div class="flex gap-2">
+<div class="relative flex-1 group">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-outline group-focus-within:text-primary transition-colors">search</span>
+<input class="w-full bg-surface-container-low border border-outline-variant rounded-xl py-3 pl-10 pr-4 text-body-sm focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all" placeholder="Buscar movimientos..." type="text"/>
+</div>
+<button class="bg-surface-container-low border border-outline-variant rounded-xl px-3 flex items-center justify-center hover:bg-surface-variant transition-colors active:scale-95" onclick="toggleFilters()">
+<span class="material-symbols-outlined text-on-surface-variant">tune</span>
+</button>
+</div>
+<!-- Transaction Tabs -->
+<div class="flex p-1 bg-surface-container-lowest rounded-xl border border-outline-variant/30">
+<button class="flex-1 py-2 text-label-caps font-label-caps transition-all rounded-lg bg-primary-container text-on-primary-container" id="tab-gastos" onclick="switchTab('gastos')">GASTOS</button>
+<button class="flex-1 py-2 text-label-caps font-label-caps transition-all rounded-lg text-on-surface-variant hover:text-on-surface" id="tab-ingresos" onclick="switchTab('ingresos')">INGRESOS</button>
+</div>
+</section>
+<!-- Transaction List -->
+<section class="space-y-3" id="transaction-list">
+<!-- Day Header -->
+<div class="pt-2 pb-1 border-b border-outline-variant/20">
+<p class="font-label-caps text-label-caps text-on-surface-variant">HOY, 14 DE MAYO</p>
+</div>
+<!-- Item 1 -->
+<div class="flex items-center justify-between p-md bg-surface-container-low rounded-xl border border-outline-variant/10 hover:border-outline-variant/40 transition-colors group">
+<div class="flex items-center gap-4">
+<div class="w-12 h-12 rounded-xl bg-surface-variant flex items-center justify-center text-primary-fixed">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">restaurant</span>
+</div>
+<div>
+<h4 class="font-title-md text-body-lg text-on-surface">Almuerzo Sushi</h4>
+<p class="text-body-sm text-on-surface-variant">Comida • 13:45</p>
+</div>
+</div>
+<div class="text-right">
+<p class="font-title-md text-body-lg text-white">-$ 14.200</p>
+<p class="text-xs text-outline-variant">ARS</p>
+</div>
+</div>
+<!-- Item 2 -->
+<div class="flex items-center justify-between p-md bg-surface-container-low rounded-xl border border-outline-variant/10 hover:border-outline-variant/40 transition-colors">
+<div class="flex items-center gap-4">
+<div class="w-12 h-12 rounded-xl bg-surface-variant flex items-center justify-center text-primary-fixed">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">commute</span>
+</div>
+<div>
+<h4 class="font-title-md text-body-lg text-on-surface">Uber al Centro</h4>
+<p class="text-body-sm text-on-surface-variant">Transporte • 09:20</p>
+</div>
+</div>
+<div class="text-right">
+<p class="font-title-md text-body-lg text-white">-$ 3.500</p>
+<p class="text-xs text-outline-variant">ARS</p>
+</div>
+</div>
+<!-- Day Header -->
+<div class="pt-6 pb-1 border-b border-outline-variant/20">
+<p class="font-label-caps text-label-caps text-on-surface-variant">AYER, 13 DE MAYO</p>
+</div>
+<!-- Item 3 -->
+<div class="flex items-center justify-between p-md bg-surface-container-low rounded-xl border border-outline-variant/10 hover:border-outline-variant/40 transition-colors">
+<div class="flex items-center gap-4">
+<div class="w-12 h-12 rounded-xl bg-surface-variant flex items-center justify-center text-primary-fixed">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">shopping_bag</span>
+</div>
+<div>
+<h4 class="font-title-md text-body-lg text-on-surface">Supermercado</h4>
+<p class="text-body-sm text-on-surface-variant">Hogar • 18:30</p>
+</div>
+</div>
+<div class="text-right">
+<p class="font-title-md text-body-lg text-white">-$ 45.900</p>
+<p class="text-xs text-outline-variant">ARS</p>
+</div>
+</div>
+</section>
+</main>
+<!-- FAB for adding (Contextual) -->
+<button class="fixed bottom-24 right-6 w-14 h-14 bg-primary-container text-on-primary-container rounded-full shadow-lg shadow-primary-container/30 flex items-center justify-center z-50 hover:scale-110 active:scale-95 transition-all" onclick="toggleModal(true)">
+<span class="material-symbols-outlined text-3xl">add</span>
+</button>
+<!-- Bottom Navigation Bar -->
+<nav class="fixed bottom-0 left-0 w-full z-50 flex justify-around items-center px-4 pb-4 pt-2 bg-surface-container/60 dark:bg-surface-container-low/60 backdrop-blur-xl border-t border-outline-variant/20 shadow-lg rounded-t-xl max-w-[1200px] left-1/2 -translate-x-1/2">
+<a class="flex flex-col items-center justify-center text-on-surface-variant hover:text-primary transition-colors" href="#">
+<span class="material-symbols-outlined">dashboard</span>
+<span class="font-label-caps text-label-caps">Dashboard</span>
+</a>
+<a class="flex flex-col items-center justify-center bg-primary-container text-on-primary-container rounded-full px-4 py-1 active:scale-90 transition-all duration-200" href="#">
+<span class="material-symbols-outlined">account_balance_wallet</span>
+<span class="font-label-caps text-label-caps">Finanzas</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant hover:text-primary transition-colors" href="#">
+<span class="material-symbols-outlined">event_upcoming</span>
+<span class="font-label-caps text-label-caps">Recordatorios</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant hover:text-primary transition-colors" href="#">
+<span class="material-symbols-outlined">description</span>
+<span class="font-label-caps text-label-caps">Notas</span>
+</a>
+</nav>
+<!-- Transaction Form Modal -->
+<div class="fixed inset-0 bg-background/80 backdrop-blur-sm z-[60] hidden flex items-end md:items-center justify-center p-4" id="modal-overlay">
+<div class="w-full max-w-md bg-surface-container-high rounded-t-3xl md:rounded-3xl border border-outline-variant/30 p-lg shadow-2xl transition-all translate-y-full" id="modal-content">
+<div class="flex justify-between items-center mb-6">
+<h3 class="font-headline-lg-mobile text-headline-lg-mobile text-primary">Nuevo Registro</h3>
+<button class="p-2 hover:bg-surface-variant rounded-full text-on-surface-variant transition-colors" onclick="toggleModal(false)">
+<span class="material-symbols-outlined">close</span>
+</button>
+</div>
+<form class="space-y-5" onsubmit="event.preventDefault(); toggleModal(false);">
+<!-- Amount Input -->
+<div class="space-y-2">
+<label class="text-label-caps font-label-caps text-on-surface-variant ml-1">MONTO (ARS)</label>
+<div class="relative">
+<span class="absolute left-4 top-1/2 -translate-y-1/2 font-bold text-primary">$</span>
+<input class="w-full bg-background border border-outline-variant rounded-xl py-4 pl-8 pr-4 text-2xl font-currency-display focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all" min="0.01" placeholder="0,00" required="" step="0.01" type="number"/>
+</div>
+</div>
+<!-- Category Selector -->
+<div class="space-y-2">
+<label class="text-label-caps font-label-caps text-on-surface-variant ml-1">CATEGORÍA</label>
+<select class="w-full bg-background border border-outline-variant rounded-xl py-3 px-4 text-body-sm focus:border-primary outline-none appearance-none cursor-pointer">
+<optgroup label="Gastos">
+<option>Comida y Bebida</option>
+<option>Transporte</option>
+<option>Servicios</option>
+<option>Entretenimiento</option>
+</optgroup>
+<optgroup label="Ingresos">
+<option>Sueldo</option>
+<option>Ventas</option>
+<option>Inversiones</option>
+</optgroup>
+</select>
+</div>
+<!-- Date and Time -->
+<div class="grid grid-cols-2 gap-4">
+<div class="space-y-2">
+<label class="text-label-caps font-label-caps text-on-surface-variant ml-1">FECHA</label>
+<input class="w-full bg-background border border-outline-variant rounded-xl py-3 px-4 text-body-sm focus:border-primary outline-none" type="date" value="2024-05-14"/>
+</div>
+<div class="space-y-2">
+<label class="text-label-caps font-label-caps text-on-surface-variant ml-1">HORA</label>
+<input class="w-full bg-background border border-outline-variant rounded-xl py-3 px-4 text-body-sm focus:border-primary outline-none" type="time" value="15:30"/>
+</div>
+</div>
+<!-- Description -->
+<div class="space-y-2">
+<label class="text-label-caps font-label-caps text-on-surface-variant ml-1">DESCRIPCIÓN</label>
+<textarea class="w-full bg-background border border-outline-variant rounded-xl py-3 px-4 text-body-sm focus:border-primary outline-none resize-none" placeholder="Opcional..." rows="2"></textarea>
+</div>
+<!-- Submit Button -->
+<button class="w-full py-4 bg-primary-container text-white font-title-md rounded-full shadow-lg active:scale-95 transition-all mt-4" type="submit">
+                    Guardar Movimiento
+                </button>
+</form>
+</div>
+</div>
+<script>
+        function toggleModal(show) {
+            const overlay = document.getElementById('modal-overlay');
+            const content = document.getElementById('modal-content');
+            
+            if (show) {
+                overlay.classList.remove('hidden');
+                overlay.classList.add('flex');
+                setTimeout(() => {
+                    content.classList.remove('translate-y-full');
+                    content.classList.add('translate-y-0');
+                }, 10);
+            } else {
+                content.classList.remove('translate-y-0');
+                content.classList.add('translate-y-full');
+                setTimeout(() => {
+                    overlay.classList.remove('flex');
+                    overlay.classList.add('hidden');
+                }, 300);
+            }
+        }
+
+        function switchTab(type) {
+            const gastos = document.getElementById('tab-gastos');
+            const ingresos = document.getElementById('tab-ingresos');
+            
+            if (type === 'gastos') {
+                gastos.className = "flex-1 py-2 text-label-caps font-label-caps transition-all rounded-lg bg-primary-container text-on-primary-container";
+                ingresos.className = "flex-1 py-2 text-label-caps font-label-caps transition-all rounded-lg text-on-surface-variant hover:text-on-surface";
+            } else {
+                ingresos.className = "flex-1 py-2 text-label-caps font-label-caps transition-all rounded-lg bg-primary-container text-on-primary-container";
+                gastos.className = "flex-1 py-2 text-label-caps font-label-caps transition-all rounded-lg text-on-surface-variant hover:text-on-surface";
+            }
+        }
+
+        function toggleFilters() {
+            // Simple visual feedback for demonstration
+            const btn = event.currentTarget;
+            btn.classList.toggle('border-primary');
+            btn.classList.toggle('text-primary');
+        }
+
+        // Close modal on escape
+        window.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') toggleModal(false);
+        });
+    </script>
+</body></html>

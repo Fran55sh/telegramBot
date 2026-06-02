@@ -1,0 +1,20 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body {
+  min-height: 100dvh;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.glass-card {
+  @apply rounded-xl border border-outline-variant/30 bg-surface-container-low/60 backdrop-blur-xl;
+}
+
+.material-symbols-outlined {
+  font-variation-settings: "FILL" 0, "wght" 400, "GRAD" 0, "opsz" 24;
+}
+
+.tabular-nums {
+  font-variant-numeric: tabular-nums;
+}

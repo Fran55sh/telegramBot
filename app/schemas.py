@@ -76,6 +76,7 @@ class ReminderAction(BaseModel):
     intent: Literal["reminder"] = "reminder"
     datetime: datetime
     text: str
+    amount: Decimal | None = None
 
 
 class NoteAction(BaseModel):

@@ -120,6 +120,62 @@ The same payload can target either webhook path: **`/telegram/webhook`** or **`/
 - `/r turno dni 25/6/26` — reminder on that date (day/month/year or 2-digit year); optional time: `/r mañana 10am dentista`
 - Free-text Spanish, e.g. *"gasté 5000 en transporte"* — only if `ENABLE_LLM_PARSER=true` and `OPENAI_API_KEY` is set (v2.0)
 
+## Web GUI (React frontend)
+
+The project includes a web UI in **`frontend/`** (Vite + React + TypeScript + Tailwind), served from FastAPI when built.
+
+### Configure API auth
+
+In **`.env`** (backend):
+
+| Variable | Description |
+|----------|-------------|
+| `WEB_APP_TOKEN` | Bearer token required by `/api/*` |
+| `CORS_ORIGINS` | Dev origins (default `http://localhost:5173`) |
+
+In **`frontend/.env`** (copy from `frontend/.env.example`):
+
+| Variable | Description |
+|----------|-------------|
+| `VITE_WEB_APP_TOKEN` | Same value as `WEB_APP_TOKEN` |
+| `VITE_TELEGRAM_CHAT_ID` | Your Telegram `chat_id` (data scope) |
+
+### Development (hot reload)
+
+Terminal 1 — backend:
+
+```powershell
+python -m uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
+```
+
+Terminal 2 — frontend:
+
+```powershell
+cd frontend
+npm install
+npm run dev
+```
+
+Open **http://localhost:5173**. Vite proxies `/api` to the backend.
+
+### Production build
+
+```powershell
+cd frontend
+npm run build
+```
+
+FastAPI serves **`frontend/dist`** at `/` when the folder exists. Docker multi-stage build compiles the frontend automatically.
+
+### API overview
+
+- `GET /api/me` — profile + notification count
+- `GET/POST/PATCH/DELETE /api/expenses`, `/api/incomes`, `/api/reminders`, `/api/notes`
+- `GET/POST/PATCH/DELETE /api/categories?kind=expense|income`
+- `GET /api/reports/dashboard`, `/api/reports/monthly`
+
+Headers on every request: `Authorization: Bearer <WEB_APP_TOKEN>`, `X-Telegram-Chat-Id: <chat_id>`.
+
 ## 7. Tests
 
 ```bash

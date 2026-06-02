@@ -43,6 +43,16 @@ class Settings(BaseSettings):
 
     reminder_check_seconds: int = 60
 
+    web_app_token: str = Field(default="dev-token-change-me", validation_alias="WEB_APP_TOKEN")
+    cors_origins_csv: str = Field(default="http://localhost:5173", validation_alias="CORS_ORIGINS")
+
+    @property
+    def cors_origins(self) -> list[str]:
+        text = self.cors_origins_csv.strip()
+        if not text:
+            return []
+        return [part.strip() for part in text.split(",") if part.strip()]
+
     @model_validator(mode="after")
     def resolve_database_url_for_environment(self) -> Self:
         env = self.environment.strip().lower()

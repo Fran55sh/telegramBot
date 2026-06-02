@@ -1,13 +1,17 @@
 import logging
 from contextlib import asynccontextmanager
+from pathlib import Path
 from typing import Any
 
 from fastapi import Depends, FastAPI, Header, HTTPException, Request
-from fastapi.responses import Response
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import FileResponse, Response
+from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, HttpUrl
 from sqlalchemy.orm import Session
 
 from app.actions import ActionService
+from app.api.router import api_router
 from app.config import Settings, get_settings
 from app.database import get_db, init_db
 from app.errors import LlmDisabledError, ParserError
@@ -17,6 +21,8 @@ from app.telegram import TelegramClient
 from app.utils import normalize_incoming_chat_text, resolved_slash_command
 
 logger = logging.getLogger(__name__)
+
+FRONTEND_DIST = Path(__file__).resolve().parent.parent / "frontend" / "dist"
 
 
 class SetWebhookRequest(BaseModel):
@@ -62,7 +68,19 @@ async def lifespan(app: FastAPI):
         logger.info("app_stopped")
 
 
-app = FastAPI(title="Telegram Personal Assistant", version="0.1.0", lifespan=lifespan)
+app = FastAPI(title="Telegram Personal Assistant", version="0.2.0", lifespan=lifespan)
+
+_settings = get_settings()
+if _settings.cors_origins:
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=_settings.cors_origins,
+        allow_credentials=True,
+        allow_methods=["*"],
+        allow_headers=["*"],
+    )
+
+app.include_router(api_router)
 
 
 @app.get("/health")
@@ -170,3 +188,30 @@ async def telegram_webhook(
     await telegram.send_message(chat_id, response_text)
     logger.info("telegram_response chat_id=%s text=%r", chat_id, response_text)
     return {"ok": True}
+
+
+def _mount_frontend() -> None:
+    if not FRONTEND_DIST.is_dir():
+        logger.info("frontend_dist_missing path=%s", FRONTEND_DIST)
+        return
+    assets_dir = FRONTEND_DIST / "assets"
+    if assets_dir.is_dir():
+        app.mount("/assets", StaticFiles(directory=assets_dir), name="frontend-assets")
+
+    index_file = FRONTEND_DIST / "index.html"
+
+    @app.get("/", include_in_schema=False)
+    async def spa_root() -> FileResponse:
+        return FileResponse(index_file)
+
+    @app.get("/{full_path:path}", include_in_schema=False)
+    async def spa_fallback(full_path: str) -> FileResponse:
+        if full_path.startswith(("api/", "telegram/", "webhook/", "health")):
+            raise HTTPException(status_code=404)
+        candidate = FRONTEND_DIST / full_path
+        if candidate.is_file():
+            return FileResponse(candidate)
+        return FileResponse(index_file)
+
+
+_mount_frontend()

@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="es-AR"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Gestión de Recordatorios</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=Geist:wght@400;500;600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "primary-container": "#6d28d9",
+                        "secondary-fixed-dim": "#adc6ff",
+                        "on-secondary-fixed": "#001a42",
+                        "on-primary": "#3f008d",
+                        "on-primary-fixed-variant": "#5b00c5",
+                        "secondary-container": "#0566d9",
+                        "tertiary": "#4edea3",
+                        "secondary": "#adc6ff",
+                        "primary": "#d3bbff",
+                        "outline": "#958da1",
+                        "surface-container": "#171f33",
+                        "on-tertiary-fixed": "#002113",
+                        "on-primary-container": "#dac5ff",
+                        "inverse-on-surface": "#283044",
+                        "on-secondary-fixed-variant": "#004395",
+                        "on-error-container": "#ffdad6",
+                        "on-surface-variant": "#ccc3d7",
+                        "on-background": "#dae2fd",
+                        "tertiary-container": "#006544",
+                        "surface-container-low": "#131b2e",
+                        "surface": "#0b1326",
+                        "on-secondary-container": "#e6ecff",
+                        "on-secondary": "#002e6a",
+                        "outline-variant": "#4a4455",
+                        "on-tertiary-container": "#58e7ab",
+                        "surface-dim": "#0b1326",
+                        "on-error": "#690005",
+                        "error-container": "#93000a",
+                        "primary-fixed": "#ebddff",
+                        "on-tertiary-fixed-variant": "#005236",
+                        "surface-variant": "#2d3449",
+                        "error": "#ffb4ab",
+                        "primary-fixed-dim": "#d3bbff",
+                        "inverse-surface": "#dae2fd",
+                        "on-primary-fixed": "#250059",
+                        "surface-container-high": "#222a3d",
+                        "surface-tint": "#d3bbff",
+                        "surface-bright": "#31394d",
+                        "surface-container-highest": "#2d3449",
+                        "background": "#0b1326",
+                        "on-surface": "#dae2fd",
+                        "on-tertiary": "#003824",
+                        "tertiary-fixed-dim": "#4edea3",
+                        "inverse-primary": "#7331df",
+                        "surface-container-lowest": "#060e20",
+                        "secondary-fixed": "#d8e2ff",
+                        "tertiary-fixed": "#6ffbbe"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "base": "4px",
+                        "md": "16px",
+                        "lg": "24px",
+                        "xs": "4px",
+                        "gutter": "16px",
+                        "sm": "8px",
+                        "xl": "40px",
+                        "container-margin": "20px"
+                    },
+                    "fontFamily": {
+                        "display-lg": ["Inter"],
+                        "currency-display": ["Geist"],
+                        "title-md": ["Inter"],
+                        "headline-lg-mobile": ["Inter"],
+                        "body-lg": ["Inter"],
+                        "label-caps": ["Geist"],
+                        "headline-lg": ["Inter"],
+                        "body-sm": ["Inter"]
+                    },
+                    "fontSize": {
+                        "display-lg": ["48px", { "lineHeight": "56px", "letterSpacing": "-0.02em", "fontWeight": "700" }],
+                        "currency-display": ["32px", { "lineHeight": "40px", "fontWeight": "500" }],
+                        "title-md": ["20px", { "lineHeight": "28px", "fontWeight": "600" }],
+                        "headline-lg-mobile": ["28px", { "lineHeight": "36px", "fontWeight": "700" }],
+                        "body-lg": ["16px", { "lineHeight": "24px", "fontWeight": "400" }],
+                        "label-caps": ["12px", { "lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "600" }],
+                        "headline-lg": ["32px", { "lineHeight": "40px", "letterSpacing": "-0.01em", "fontWeight": "700" }],
+                        "body-sm": ["14px", { "lineHeight": "20px", "fontWeight": "400" }]
+                    }
+                },
+            },
+        }
+    </script>
+<style>
+        .glass-card {
+            background: rgba(30, 41, 59, 0.6);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(74, 68, 85, 0.3);
+        }
+        .active-tab-glow {
+            box-shadow: 0 0 15px rgba(211, 187, 255, 0.2);
+        }
+        ::-webkit-scrollbar {
+            width: 4px;
+        }
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #4a4455;
+            border-radius: 10px;
+        }
+        .fab-gradient {
+            background: linear-gradient(135deg, #6d28d9 0%, #0566d9 100%);
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background text-on-background font-body-lg min-h-screen pb-24 overflow-x-hidden">
+<!-- Top Navigation Bar -->
+<header class="bg-surface/80 backdrop-blur-xl flex justify-between items-center px-gutter h-16 w-full z-40 fixed top-0 docked full-width">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-full bg-surface-variant flex items-center justify-center overflow-hidden border border-outline-variant/30">
+<img alt="User Profile" class="w-full h-full object-cover" data-alt="A professional user profile avatar for a personal finance application. The avatar features a clean-shaven man with modern glasses, wearing a sharp navy blue blazer over a crisp white shirt. The background is a soft, out-of-focus digital wealth interface with deep violet and blue hues, maintaining a sophisticated corporate yet tech-savvy aesthetic." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBoQ-tumlVKEqnyUXVrr135VPDVo7QJqPUf5xvkXurrGBBSygDLAw3sxT0TORQXJ7qNRhQIN3E_xNiWRCJ0ZWmw34fTWmSGzvGc4fc6h0EK0dj8D2asfTWdTXWrlwV1Nx20MKg5MnyZjNpmnnhBn6DiRuhV4TDr758PX_JnRqTTOFetDa-6NqznSnez4Cl-U4A2BmDLG3fXlka-B3AdweZN1bTBsPNB2oBJfI1ZQPuOVxWEdXfk9VdP7YAJh5DU07U87RUJ39B_RnSe"/>
+</div>
+<h1 class="font-headline-lg-mobile text-headline-lg-mobile text-primary">Hoy</h1>
+</div>
+<button class="text-primary hover:bg-surface-bright/10 active:scale-95 transition-transform p-2 rounded-full">
+<span class="material-symbols-outlined">notifications</span>
+</button>
+</header>
+<main class="px-gutter pt-20 max-w-2xl mx-auto space-y-6">
+<!-- Segmented Control (Pendientes / Historial) -->
+<div class="flex bg-surface-container-low p-1 rounded-full border border-outline-variant/20">
+<button class="flex-1 py-2 rounded-full font-label-caps text-label-caps transition-all duration-300 bg-primary-container text-on-primary-container active-tab-glow" id="tab-pendientes" onclick="switchTab('pendientes')">
+                PENDIENTES
+            </button>
+<button class="flex-1 py-2 rounded-full font-label-caps text-label-caps transition-all duration-300 text-on-surface-variant hover:text-primary" id="tab-historial" onclick="switchTab('historial')">
+                HISTORIAL
+            </button>
+</div>
+<!-- Section: Today's Summary (Atmospheric Glow) -->
+<div class="relative overflow-hidden glass-card rounded-xl p-lg">
+<div class="absolute -right-12 -top-12 w-32 h-32 bg-primary/10 rounded-full blur-3xl"></div>
+<div class="relative z-10 flex items-center justify-between">
+<div>
+<h2 class="font-title-md text-title-md text-on-surface">Mis Tareas</h2>
+<p class="text-on-surface-variant font-body-sm">Tenés 3 pendientes para hoy</p>
+</div>
+<div class="w-12 h-12 rounded-full bg-primary-container/20 flex items-center justify-center text-primary">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">event_upcoming</span>
+</div>
+</div>
+</div>
+<!-- Reminders List -->
+<div class="space-y-4" id="reminders-container">
+<!-- Pending Item 1 -->
+<div class="reminder-item pendientes flex items-center gap-md glass-card p-md rounded-xl group hover:border-primary/50 transition-colors">
+<div class="flex-shrink-0 w-12 h-12 rounded-lg bg-surface-variant flex flex-col items-center justify-center">
+<span class="font-label-caps text-label-caps text-primary">MAY</span>
+<span class="font-title-md text-title-md leading-none">24</span>
+</div>
+<div class="flex-grow min-w-0">
+<div class="flex items-center gap-2 mb-1">
+<span class="inline-block px-2 py-0.5 rounded-full text-[10px] font-bold bg-tertiary/10 text-tertiary border border-tertiary/20">FINANZAS</span>
+<span class="text-on-surface-variant font-body-sm">15:30 HS</span>
+</div>
+<h3 class="font-title-md text-body-lg text-on-surface truncate">Pago Tarjeta de Crédito Visa</h3>
+</div>
+<button class="text-on-surface-variant hover:text-primary transition-colors">
+<span class="material-symbols-outlined">more_vert</span>
+</button>
+</div>
+<!-- Pending Item 2 -->
+<div class="reminder-item pendientes flex items-center gap-md glass-card p-md rounded-xl group hover:border-primary/50 transition-colors">
+<div class="flex-shrink-0 w-12 h-12 rounded-lg bg-surface-variant flex flex-col items-center justify-center">
+<span class="font-label-caps text-label-caps text-primary">MAY</span>
+<span class="font-title-md text-title-md leading-none">24</span>
+</div>
+<div class="flex-grow min-w-0">
+<div class="flex items-center gap-2 mb-1">
+<span class="inline-block px-2 py-0.5 rounded-full text-[10px] font-bold bg-secondary-container/10 text-secondary border border-secondary/20">SERVICIOS</span>
+<span class="text-on-surface-variant font-body-sm">18:00 HS</span>
+</div>
+<h3 class="font-title-md text-body-lg text-on-surface truncate">Vencimiento Luz (Edesur)</h3>
+</div>
+<button class="text-on-surface-variant hover:text-primary transition-colors">
+<span class="material-symbols-outlined">more_vert</span>
+</button>
+</div>
+<!-- Pending Item 3 -->
+<div class="reminder-item pendientes flex items-center gap-md glass-card p-md rounded-xl group hover:border-primary/50 transition-colors">
+<div class="flex-shrink-0 w-12 h-12 rounded-lg bg-surface-variant flex flex-col items-center justify-center">
+<span class="font-label-caps text-label-caps text-primary">MAY</span>
+<span class="font-title-md text-title-md leading-none">25</span>
+</div>
+<div class="flex-grow min-w-0">
+<div class="flex items-center gap-2 mb-1">
+<span class="inline-block px-2 py-0.5 rounded-full text-[10px] font-bold bg-primary-container/10 text-primary border border-primary/20">INVERSIONES</span>
+<span class="text-on-surface-variant font-body-sm">10:00 HS</span>
+</div>
+<h3 class="font-title-md text-body-lg text-on-surface truncate">Revisión Cartera de Bonos</h3>
+</div>
+<button class="text-on-surface-variant hover:text-primary transition-colors">
+<span class="material-symbols-outlined">more_vert</span>
+</button>
+</div>
+<!-- History Item (Hidden by default) -->
+<div class="reminder-item historial hidden flex items-center gap-md glass-card p-md rounded-xl opacity-60">
+<div class="flex-shrink-0 w-12 h-12 rounded-lg bg-surface-container flex flex-col items-center justify-center">
+<span class="font-label-caps text-label-caps text-outline">MAY</span>
+<span class="font-title-md text-title-md leading-none text-outline">20</span>
+</div>
+<div class="flex-grow min-w-0">
+<div class="flex items-center gap-2 mb-1">
+<span class="inline-block px-2 py-0.5 rounded-full text-[10px] font-bold bg-outline-variant/20 text-outline border border-outline-variant/30 uppercase">COMPLETADO</span>
+</div>
+<h3 class="font-title-md text-body-lg text-on-surface line-through truncate">Transferencia Alquiler</h3>
+</div>
+<span class="material-symbols-outlined text-tertiary">check_circle</span>
+</div>
+</div>
+</main>
+<!-- Floating Action Button -->
+<button class="fab-gradient fixed bottom-24 right-6 w-14 h-14 rounded-full shadow-2xl flex items-center justify-center text-white active:scale-90 transition-all duration-200 z-40" onclick="toggleModal(true)">
+<span class="material-symbols-outlined text-3xl">add</span>
+</button>
+<!-- Modal: Add New Reminder -->
+<div class="fixed inset-0 bg-background/80 backdrop-blur-sm z-[100] flex items-end md:items-center justify-center p-gutter transition-opacity duration-300 pointer-events-none opacity-0" id="new-reminder-modal">
+<div class="bg-surface-container-high w-full max-w-md rounded-t-3xl md:rounded-3xl p-lg shadow-2xl transform translate-y-full md:translate-y-0 md:scale-95 transition-transform duration-300">
+<div class="flex items-center justify-between mb-6">
+<h3 class="font-headline-lg text-title-md text-primary">Nuevo Recordatorio</h3>
+<button class="p-1 hover:bg-surface-bright/10 rounded-full" onclick="toggleModal(false)">
+<span class="material-symbols-outlined">close</span>
+</button>
+</div>
+<form class="space-y-6" onsubmit="event.preventDefault(); toggleModal(false);">
+<div>
+<label class="block font-label-caps text-label-caps text-on-surface-variant mb-2">QUÉ NECESITÁS RECORDAR?</label>
+<input class="w-full bg-background border border-outline-variant rounded-xl px-4 py-3 text-on-surface focus:border-primary focus:ring-1 focus:ring-primary transition-all outline-none" placeholder="Ej: Pagar el seguro del auto" type="text"/>
+</div>
+<div class="grid grid-cols-2 gap-4">
+<div>
+<label class="block font-label-caps text-label-caps text-on-surface-variant mb-2">FECHA</label>
+<input class="w-full bg-background border border-outline-variant rounded-xl px-4 py-3 text-on-surface focus:border-primary focus:ring-1 focus:ring-primary outline-none" type="date"/>
+</div>
+<div>
+<label class="block font-label-caps text-label-caps text-on-surface-variant mb-2">HORA</label>
+<input class="w-full bg-background border border-outline-variant rounded-xl px-4 py-3 text-on-surface focus:border-primary focus:ring-1 focus:ring-primary outline-none" type="time"/>
+</div>
+</div>
+<div>
+<label class="block font-label-caps text-label-caps text-on-surface-variant mb-2">CATEGORÍA</label>
+<div class="flex flex-wrap gap-2">
+<button class="px-3 py-1.5 rounded-full border border-outline-variant text-body-sm hover:border-primary hover:text-primary transition-colors" type="button">Finanzas</button>
+<button class="px-3 py-1.5 rounded-full border border-outline-variant text-body-sm hover:border-primary hover:text-primary transition-colors" type="button">Servicios</button>
+<button class="px-3 py-1.5 rounded-full border border-outline-variant text-body-sm hover:border-primary hover:text-primary transition-colors" type="button">Otros</button>
+</div>
+</div>
+<button class="w-full bg-primary-container text-on-primary-container py-4 rounded-full font-title-md text-title-md hover:brightness-110 active:scale-[0.98] transition-all shadow-lg" type="submit">
+                    Crear Recordatorio
+                </button>
+</form>
+</div>
+</div>
+<!-- Bottom Navigation Bar -->
+<nav class="fixed bottom-0 left-0 w-full z-50 flex justify-around items-center px-4 pb-4 pt-2 bg-surface-container/60 dark:bg-surface-container-low/60 backdrop-blur-xl border-t border-outline-variant/20 shadow-lg rounded-t-xl">
+<a class="flex flex-col items-center justify-center text-on-surface-variant hover:text-primary transition-colors active:scale-90" href="#">
+<span class="material-symbols-outlined">dashboard</span>
+<span class="font-label-caps text-label-caps">Dashboard</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant hover:text-primary transition-colors active:scale-90" href="#">
+<span class="material-symbols-outlined">account_balance_wallet</span>
+<span class="font-label-caps text-label-caps">Finanzas</span>
+</a>
+<a class="flex flex-col items-center justify-center bg-primary-container text-on-primary-container rounded-full px-4 py-1 active:scale-90 transition-all duration-200" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">event_upcoming</span>
+<span class="font-label-caps text-label-caps">Recordatorios</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant hover:text-primary transition-colors active:scale-90" href="#">
+<span class="material-symbols-outlined">description</span>
+<span class="font-label-caps text-label-caps">Notas</span>
+</a>
+</nav>
+<script>
+        function switchTab(tab) {
+            const pendientesTab = document.getElementById('tab-pendientes');
+            const historialTab = document.getElementById('tab-historial');
+            const items = document.querySelectorAll('.reminder-item');
+
+            if (tab === 'pendientes') {
+                pendientesTab.classList.add('bg-primary-container', 'text-on-primary-container', 'active-tab-glow');
+                pendientesTab.classList.remove('text-on-surface-variant');
+                
+                historialTab.classList.remove('bg-primary-container', 'text-on-primary-container', 'active-tab-glow');
+                historialTab.classList.add('text-on-surface-variant');
+
+                items.forEach(item => {
+                    if (item.classList.contains('pendientes')) {
+                        item.classList.remove('hidden');
+                    } else {
+                        item.classList.add('hidden');
+                    }
+                });
+            } else {
+                historialTab.classList.add('bg-primary-container', 'text-on-primary-container', 'active-tab-glow');
+                historialTab.classList.remove('text-on-surface-variant');
+                
+                pendientesTab.classList.remove('bg-primary-container', 'text-on-primary-container', 'active-tab-glow');
+                pendientesTab.classList.add('text-on-surface-variant');
+
+                items.forEach(item => {
+                    if (item.classList.contains('historial')) {
+                        item.classList.remove('hidden');
+                    } else {
+                        item.classList.add('hidden');
+                    }
+                });
+            }
+        }
+
+        function toggleModal(show) {
+            const modal = document.getElementById('new-reminder-modal');
+            const content = modal.querySelector('div');
+            
+            if (show) {
+                modal.classList.remove('pointer-events-none', 'opacity-0');
+                content.classList.remove('translate-y-full', 'md:scale-95');
+                content.classList.add('translate-y-0', 'md:scale-100');
+            } else {
+                modal.classList.add('opacity-0');
+                content.classList.add('translate-y-full', 'md:scale-95');
+                content.classList.remove('translate-y-0', 'md:scale-100');
+                setTimeout(() => {
+                    modal.classList.add('pointer-events-none');
+                }, 300);
+            }
+        }
+    </script>
+</body></html>
