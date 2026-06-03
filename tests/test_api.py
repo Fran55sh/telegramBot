@@ -19,6 +19,7 @@ from app.services.categories import seed_default_categories
 async def client(monkeypatch):
     monkeypatch.setenv("WEB_APP_TOKEN", "test-token")
     monkeypatch.setenv("DATABASE_URL", "sqlite://")
+    monkeypatch.setenv("TELEGRAM_WEBHOOK_SECRET", "")
     get_settings.cache_clear()
 
     engine = create_engine(
@@ -131,6 +132,14 @@ async def test_create_custom_category(client):
     )
     assert created.status_code == 201
     assert created.json()["label"] == "Mascotas"
+
+
+@pytest.mark.asyncio
+async def test_webhook_accepts_post_on_short_path(client):
+    c, _db = client
+    resp = await c.post("/webhook", json={"update_id": 1})
+    assert resp.status_code == 200
+    assert resp.json() == {"ok": True}
 
 
 @pytest.mark.asyncio

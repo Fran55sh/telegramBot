@@ -110,7 +110,7 @@ On Linux/macOS use `\` line continuation instead of `^`.
 
 If `TELEGRAM_WEBHOOK_SECRET` is empty in `.env`, you can omit the header (not recommended for production).
 
-The same payload can target either webhook path: **`/telegram/webhook`** or **`/webhook/telegram`**.
+The same payload can target any of these webhook paths: **`/telegram/webhook`**, **`/webhook/telegram`**, or **`/webhook`**.
 
 ## 6. Quick test commands in Telegram
 
@@ -138,7 +138,7 @@ In **`frontend/.env`** (copy from `frontend/.env.example`):
 | Variable | Description |
 |----------|-------------|
 | `VITE_WEB_APP_TOKEN` | Same value as `WEB_APP_TOKEN` |
-| `VITE_TELEGRAM_CHAT_ID` | Your Telegram `chat_id` (data scope) |
+| `VITE_TELEGRAM_CHAT_ID` | Your numeric Telegram `chat_id` (NOT the bot token). Optional if you configure via the in-app **Ajustes** screen after deploy. |
 
 ### Development (hot reload)
 

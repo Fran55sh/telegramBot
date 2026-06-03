@@ -1,6 +1,10 @@
 services:
   telegram_finance_bot:
-    build: .
+    build:
+      context: .
+      args:
+        VITE_WEB_APP_TOKEN: ${WEB_APP_TOKEN:-dev-token-change-me}
+        VITE_TELEGRAM_CHAT_ID: ${VITE_TELEGRAM_CHAT_ID:-}
     image: telegram-finance-bot:local
     container_name: telegram_finance_bot
     ports:

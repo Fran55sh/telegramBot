@@ -113,6 +113,7 @@ async def set_webhook(
 
 @app.post("/telegram/webhook")
 @app.post("/webhook/telegram")
+@app.post("/webhook")
 async def telegram_webhook(
     request: Request,
     db: Session = Depends(get_db),
@@ -206,7 +207,7 @@ def _mount_frontend() -> None:
 
     @app.get("/{full_path:path}", include_in_schema=False)
     async def spa_fallback(full_path: str) -> FileResponse:
-        if full_path.startswith(("api/", "telegram/", "webhook/", "health")):
+        if full_path in {"webhook", "telegram/webhook"} or full_path.startswith(("api/", "telegram/", "webhook/", "health")):
             raise HTTPException(status_code=404)
         candidate = FRONTEND_DIST / full_path
         if candidate.is_file():

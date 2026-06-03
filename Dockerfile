@@ -1,5 +1,11 @@
 FROM node:20-bookworm-slim AS frontend-build
 WORKDIR /frontend
+
+ARG VITE_WEB_APP_TOKEN=dev-token-change-me
+ARG VITE_TELEGRAM_CHAT_ID=
+ENV VITE_WEB_APP_TOKEN=$VITE_WEB_APP_TOKEN
+ENV VITE_TELEGRAM_CHAT_ID=$VITE_TELEGRAM_CHAT_ID
+
 COPY frontend/package.json frontend/package-lock.json* ./
 RUN npm install
 COPY frontend/ ./

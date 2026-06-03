@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { apiFetch } from "./client";
+import { apiFetch, isAuthConfigured } from "./client";
 import type {
   CategoryGroup,
   Dashboard,
@@ -11,13 +11,19 @@ import type {
 } from "./types";
 
 export function useMe() {
-  return useQuery({ queryKey: ["me"], queryFn: () => apiFetch<Me>("/api/me") });
+  return useQuery({
+    queryKey: ["me"],
+    queryFn: () => apiFetch<Me>("/api/me"),
+    enabled: isAuthConfigured(),
+    retry: false,
+  });
 }
 
 export function useDashboard() {
   return useQuery({
     queryKey: ["dashboard"],
     queryFn: () => apiFetch<Dashboard>("/api/reports/dashboard"),
+    enabled: isAuthConfigured(),
   });
 }
 
@@ -25,6 +31,7 @@ export function useCategories(kind: "expense" | "income") {
   return useQuery({
     queryKey: ["categories", kind],
     queryFn: () => apiFetch<CategoryGroup[]>(`/api/categories?kind=${kind}`),
+    enabled: isAuthConfigured(),
   });
 }
 
@@ -36,6 +43,7 @@ export function useExpenses(params?: { q?: string; category?: string }) {
   return useQuery({
     queryKey: ["expenses", params],
     queryFn: () => apiFetch<Expense[]>(`/api/expenses${qs ? `?${qs}` : ""}`),
+    enabled: isAuthConfigured(),
   });
 }
 
@@ -47,6 +55,7 @@ export function useIncomes(params?: { q?: string; category?: string }) {
   return useQuery({
     queryKey: ["incomes", params],
     queryFn: () => apiFetch<Income[]>(`/api/incomes${qs ? `?${qs}` : ""}`),
+    enabled: isAuthConfigured(),
   });
 }
 
@@ -54,6 +63,7 @@ export function useReminders(status: "pending" | "sent" | "all") {
   return useQuery({
     queryKey: ["reminders", status],
     queryFn: () => apiFetch<Reminder[]>(`/api/reminders?status=${status}`),
+    enabled: isAuthConfigured(),
   });
 }
 
@@ -62,6 +72,7 @@ export function useNotes(q?: string) {
   return useQuery({
     queryKey: ["notes", q],
     queryFn: () => apiFetch<Note[]>(`/api/notes${qs}`),
+    enabled: isAuthConfigured(),
   });
 }
 
